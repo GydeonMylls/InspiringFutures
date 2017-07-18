@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gideon Mills.
+ * Copyright 2017 Gideon Mills
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Question;
+import uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Questionnaire;
 
 /**
  * <p> Created by Gideon Mills on 11/07/2017 for InspiringFutures. </p>
@@ -48,14 +50,27 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // For testing purposes
-
                 try{
-                    JSONObject json = new JSONObject().put(ESM_Question.ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.QUESTION, "What if the title is really so very long that it has too many character to fit on the screen?").put(ESM_Question.INSTRUCTIONS, "Words").put(ESM_Question.IS_LAST, true);
-//                    ESM_Text text = (ESM_Text) new ESM_Text().fromJSON(json);
-//                    Log.e(TAG, this.getClass().getName());
+                    JSONArray json = new JSONArray()
+                            .put(new JSONObject().put(ESM_Question.ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.QUESTION, "Is this a question?").put(ESM_Question.INSTRUCTIONS, ""))
+                            .put(new JSONObject().put(ESM_Question.ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.QUESTION, "How about another question?").put(ESM_Question.INSTRUCTIONS, "Put different words please").put(ESM_Question.IS_LAST, true));
                     Log.d(TAG, "Attempting autocreate");
-                    ESM_Question text = ESM_Question.getESMQuestion(json);
-                    text.show(getFragmentManager(), null);
+                    ESM_Questionnaire questionnaire = new ESM_Questionnaire(json);
+                    questionnaire.startQuestionnaire(getFragmentManager());
+//                    JSONObject json = new JSONObject().put(ESM_Question.ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.QUESTION, "Is this a question?").put(ESM_Question.INSTRUCTIONS, "Put some words");
+//                    ESM_Question text = ESM_Question.getESMQuestion(json);
+//                    text.setListener(new ESM_Question.ESMQuestionListener() {
+//                        @Override
+//                        public void receiveResponse(String response) {
+//                            Toast.makeText(getApplicationContext(), "Question answered", Toast.LENGTH_LONG).show();
+//                        }
+//
+//                        @Override
+//                        public void receiveCancel() {
+//
+//                        }
+//                    });
+//                    text.show(getFragmentManager(), text.TAG);
                 } catch (JSONException e) {
                     Toast.makeText(getApplicationContext(), "Arooga!", Toast.LENGTH_LONG).show();
                 }

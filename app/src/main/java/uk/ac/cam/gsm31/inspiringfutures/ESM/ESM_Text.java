@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gideon Mills.
+ * Copyright 2017 Gideon Mills
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import uk.ac.cam.gsm31.inspiringfutures.R;
 
 public class ESM_Text extends ESM_Question {
 
-    private static final String TAG = "ESM_Text";
+    public static final String TAG = "ESM_Text";
 
     public static final String esm_layout = "esm_text";
 

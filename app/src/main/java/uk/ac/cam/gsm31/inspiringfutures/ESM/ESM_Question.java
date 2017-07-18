@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gideon Mills.
+ * Copyright 2017 Gideon Mills
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import java.lang.reflect.InvocationTargetException;
 
 public abstract class ESM_Question extends DialogFragment {
 
-    private static final String TAG = "ESM_Question";
+    public static final String TAG = "ESM_Question";
 
     private JSONObject mJSON;
 
@@ -125,6 +125,7 @@ public abstract class ESM_Question extends DialogFragment {
         } catch (JSONException e) {
             Log.e(TAG, "JSON does not contain IS_LAST value, adding false");
             try {
+                //noinspection ConstantConditions
                 mJSON.put(IS_LAST, l);
             } catch (JSONException e1) {
                 // Can never happen
@@ -206,7 +207,7 @@ public abstract class ESM_Question extends DialogFragment {
      * @return Inflated layout as view object
      */
     protected View getViewByName(String layoutName) {
-        return getActivity().getLayoutInflater().inflate( getResources().getIdentifier(layoutName, "layout", getActivity().getPackageName() ) , null);
+        return getActivity().getLayoutInflater().inflate( getResources().getIdentifier(layoutName, "layout", getActivity().getPackageName() ) , null); //TODO getActivity().getPackageName() prevents easy extensibility
     }
 
     // Overriding this as abstract forces subclasses to implement it (I think, quite possibly not and this is just pointless)
