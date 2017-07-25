@@ -16,11 +16,10 @@
 
 package uk.ac.cam.gsm31.inspiringfutures.ESM;
 
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.view.View;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,19 +34,28 @@ import java.lang.reflect.InvocationTargetException;
  * <p> </p>Created by Gideon Mills on 07/07/2017 for InspiringFutures. </p>
  */
 
-public abstract class ESM_Question extends DialogFragment {
+public abstract class ESM_Question extends Fragment {
 
     public static final String TAG = "ESM_Question";
+    public static final String KEY_ESM_TYPE = "esm_type";
+    public static final String KEY_QUESTION = "question";
+    public static final String KEY_INSTRUCTIONS = "instructions";
 
     private JSONObject mJSON;
 
-    public static final String ESM_TYPE = "esm_type";
-    public static final String QUESTION = "question";
-    public static final String INSTRUCTIONS = "instructions";
-    public static final String IS_LAST = "IS_LAST";
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "Creating "+type());
+        super.onCreate(savedInstanceState);
 
-    private ESMQuestionListener mListener;
+        setRetainInstance(true);
+    }
 
+    @Override
+    public void onDestroyView() {
+        Log.d(TAG, "Destroying "+type());
+        super.onDestroyView();
+    }
 
     /**
      * Getter for question type, adds automatically if not already in JSON.
@@ -57,12 +65,12 @@ public abstract class ESM_Question extends DialogFragment {
     public String type() {
         String t = "";
         try {
-            t = (String) mJSON.get(ESM_TYPE);
+            t = (String) mJSON.get(KEY_ESM_TYPE);
         } catch (JSONException e) {
             Log.e(TAG, "JSON does not contain type, adding");
             try {
                 t = this.getClass().getName();
-                mJSON.put(ESM_TYPE, t);
+                mJSON.put(KEY_ESM_TYPE, t);
             } catch (JSONException e1) {
                 // Can never happen
                 e1.printStackTrace();
@@ -79,11 +87,11 @@ public abstract class ESM_Question extends DialogFragment {
     public String question() {
         String q = "";
         try {
-            q = (String) mJSON.get(QUESTION);
+            q = (String) mJSON.get(KEY_QUESTION);
         } catch (JSONException e) {
-            Log.e(TAG, "JSON does not contain QUESTION, adding blank string");
+            Log.e(TAG, "JSON does not contain KEY_QUESTION, adding blank string");
             try {
-                mJSON.put(QUESTION, q);
+                mJSON.put(KEY_QUESTION, q);
             } catch (JSONException e1) {
                 // Can never happen
                 e1.printStackTrace();
@@ -100,39 +108,17 @@ public abstract class ESM_Question extends DialogFragment {
     public String instructions() {
         String i = "";
         try {
-            i = (String) mJSON.get(INSTRUCTIONS);
+            i = (String) mJSON.get(KEY_INSTRUCTIONS);
         } catch (JSONException e) {
             Log.e(TAG, "JSON does not contain instructions, adding blank string");
             try {
-                mJSON.put(INSTRUCTIONS, i);
+                mJSON.put(KEY_INSTRUCTIONS, i);
             } catch (JSONException e1) {
                 // Can never happen
                 e1.printStackTrace();
             }
         }
         return i;
-    }
-
-    /**
-     * Getter for a boolean value to denote whether or not this question is the last to be displayed, adds false if no value found. Only real use is to have different button text on the last question dialog.
-     *
-     * @return True if this is the last question to be displayed, false otherwise
-     */
-    public boolean isLast() {
-        boolean l = false;
-        try {
-            l = mJSON.getBoolean(IS_LAST);
-        } catch (JSONException e) {
-            Log.e(TAG, "JSON does not contain IS_LAST value, adding false");
-            try {
-                //noinspection ConstantConditions
-                mJSON.put(IS_LAST, l);
-            } catch (JSONException e1) {
-                // Can never happen
-                e1.printStackTrace();
-            }
-        }
-        return l;
     }
 
     /**
@@ -143,7 +129,7 @@ public abstract class ESM_Question extends DialogFragment {
      */
     public ESM_Question question(String question) {
         try {
-            mJSON.put(QUESTION, question);
+            mJSON.put(KEY_QUESTION, question);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -158,22 +144,7 @@ public abstract class ESM_Question extends DialogFragment {
      */
     public ESM_Question instructions(String instructions) {
         try {
-            mJSON.put(INSTRUCTIONS, instructions);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return this;
-    }
-
-    /**
-     *  Setter for boolean value to denote whether this question is the last to be displayed. Due to the getter behaviour this only needs to be set for last question.
-     *
-     * @param isLast    True if this is the last question to be displayed, false otherwise
-     * @return Updated question object, allows chaining
-     */
-    public ESM_Question isLast(boolean isLast) {
-        try {
-            mJSON.put(IS_LAST, isLast);
+            mJSON.put(KEY_INSTRUCTIONS, instructions);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -200,55 +171,7 @@ public abstract class ESM_Question extends DialogFragment {
         return mJSON;
     }
 
-    /**
-     * Loads and inflates a layout from it's name, streamlines dialog creation for subclasses.
-     *
-     * @param layoutName    Name of layout
-     * @return Inflated layout as view object
-     */
-    protected View getViewByName(String layoutName) {
-        return getActivity().getLayoutInflater().inflate( getResources().getIdentifier(layoutName, "layout", getActivity().getPackageName() ) , null); //TODO getActivity().getPackageName() prevents easy extensibility
-    }
-
-    // Overriding this as abstract forces subclasses to implement it (I think, quite possibly not and this is just pointless)
-    @Override
-    public abstract Dialog onCreateDialog(Bundle savedInstanceState);
-
-    /**
-     * Interface for objects to be notified when a question is answered of the questionnaire canceled.
-     */
-    public interface ESMQuestionListener {
-        // TODO Listener interface
-
-        /**
-         * Method called when a question is answered.
-         * @param response    User response to question
-         */
-        void receiveResponse(String response);
-
-        /**
-         * Method called when questionnaire is cancelled.
-         */
-        void receiveCancel();
-    }
-
-    /**
-     * Register an object to be updated when questions are answered or canceled. A question can only have one listener, successive calls have no effect.
-     *
-     * @param listener Object implementing the ESMQuestionListener interface
-     * @return Updated question object, allows chaining
-     */
-    public ESM_Question setListener(ESMQuestionListener listener) {
-        // Can only have one listener
-        if (mListener == null) { mListener = listener; } return this;
-    }
-
-    /**
-     * @return Object that is notified of question answers, etc.
-     */
-    public ESMQuestionListener getListener() {
-        return mListener;
-    }
+    public abstract String getResponse();       // TODO Extend to images, video, audio
 
     /**
      * Creates an ESM question from a JSON, automatically detecting and instantiating the correct question type. Question types are stored as full class names to facilitate this.
@@ -258,8 +181,8 @@ public abstract class ESM_Question extends DialogFragment {
      * @throws JSONException JSONObject is not a recognised question type
      */
     public static ESM_Question getESMQuestion(JSONObject json) throws JSONException {
-        String type = (String) json.get(ESM_TYPE);
-        Log.d(TAG, "getESMQuestion: Detected QUESTION type" + type);
+        String type = (String) json.get(KEY_ESM_TYPE);
+        Log.d(TAG, "getESMQuestion: Detected question type " + type);
         ESM_Question question = null;
         try {
             question = (ESM_Question) Class.forName(type).getConstructors()[0].newInstance();       // Class must have a single accessible constructor that takes no arguments
@@ -275,10 +198,10 @@ public abstract class ESM_Question extends DialogFragment {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             // This is the only exception that should ever occur, insofar as exceptions should ever occur
-            Log.e(TAG, "getESMQuestion: Unknown QUESTION type");
+            Log.e(TAG, "getESMQuestion: Unknown KEY_QUESTION type");
             throw new JSONException("JSON is not a known ESM_Question type");
         }
-        // Only happens if JSON is a known QUESTION type
+        // Only happens if JSON is a known KEY_QUESTION type
         return question;
     }
 

@@ -16,4 +16,10 @@
 
 <resources>
     <string name="app_name">InspiringFutures</string>
+    <string name="submission_toast">Thank you for your feedback</string>
+    <string name="back_button">Back</string>
+    <string name="submit_button">Submit</string>
+    <string name="next_button">Next</string>
+    <string name="programme_picker_instructions">Please select the programme you are participating in</string>
+    <string name="programmes">[\"Geese Theatre\",\"Clean Break\",\"Good Vibrations\",\"Only Connect\",\"MIP\",\"Open Clasp\",\"Koestler Trust\"]</string>
 </resources>

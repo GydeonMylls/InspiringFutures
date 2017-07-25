@@ -16,12 +16,15 @@
 
 package uk.ac.cam.gsm31.inspiringfutures;
 
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.Toast;
+
+import com.google.android.gms.iid.InstanceID;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,51 +36,83 @@ import uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Questionnaire;
 /**
  * <p> Created by Gideon Mills on 11/07/2017 for InspiringFutures. </p>
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements DialogInterface.OnDismissListener {
 
-    private static final String TAG = "MainActivity";
+    public static final String TAG = "MainActivity";
+    public static final String KEY_DEVICE_ID = "device_id";
+    public static final String KEY_PROGRAMME_ID = "programme_id";
+    private static SharedPreferences sPreferences;
 
-    private Button mQuestionnaireButton;
+    private static JSONArray TEST_QUESTIONNAIRE_JSON;
+    private static ESM_Questionnaire TEST_QUESTIONNAIRE;
+    private static JSONObject TEST_QUESTION_JSON;
+    private static ESM_Question TEST_QUESTION;
+
+    private static String sDeviceId;
+    private static String sProgrammeId;
+    private Fragment mQuestionContainer;
+    private ESM_Questionnaire mQuestionnaire;
+
+    public static String getDeviceId() {
+        return sDeviceId;
+    }
+
+    public static String getProgrammeId() {
+        return sProgrammeId;
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mQuestionnaireButton = (Button) findViewById(R.id.questionnaire_button);
+        sPreferences = getPreferences(MODE_PRIVATE);
 
-        mQuestionnaireButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // For testing purposes
-                try{
-                    JSONArray json = new JSONArray()
-                            .put(new JSONObject().put(ESM_Question.ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.QUESTION, "Is this a question?").put(ESM_Question.INSTRUCTIONS, ""))
-                            .put(new JSONObject().put(ESM_Question.ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.QUESTION, "How about another question?").put(ESM_Question.INSTRUCTIONS, "Put different words please").put(ESM_Question.IS_LAST, true));
-                    Log.d(TAG, "Attempting autocreate");
-                    ESM_Questionnaire questionnaire = new ESM_Questionnaire(json);
-                    questionnaire.startQuestionnaire(getFragmentManager());
-//                    JSONObject json = new JSONObject().put(ESM_Question.ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.QUESTION, "Is this a question?").put(ESM_Question.INSTRUCTIONS, "Put some words");
-//                    ESM_Question text = ESM_Question.getESMQuestion(json);
-//                    text.setListener(new ESM_Question.ESMQuestionListener() {
-//                        @Override
-//                        public void receiveResponse(String response) {
-//                            Toast.makeText(getApplicationContext(), "Question answered", Toast.LENGTH_LONG).show();
-//                        }
-//
-//                        @Override
-//                        public void receiveCancel() {
-//
-//                        }
-//                    });
-//                    text.show(getFragmentManager(), text.TAG);
-                } catch (JSONException e) {
-                    Toast.makeText(getApplicationContext(), "Arooga!", Toast.LENGTH_LONG).show();
-                }
-            }
-        });
+        if (false) { //(sPreferences.contains(KEY_DEVICE_ID)) { TODO Uncomment this
+            sDeviceId = sPreferences.getString(KEY_DEVICE_ID, null);
+            Log.d(TAG, "Found device ID: " + sDeviceId);
+            sProgrammeId = sPreferences.getString(KEY_PROGRAMME_ID, null);
+            Log.d(TAG, "Found programme ID: " + sProgrammeId);
+        } else {
+            Log.d(TAG, "No preferences found, initialising");
+            SharedPreferences.Editor editor = sPreferences.edit();
+            sDeviceId = InstanceID.getInstance(getApplicationContext()).getId();
+            Log.d(TAG, "Setting device ID: " + sDeviceId);
+            editor.putString(KEY_DEVICE_ID, sDeviceId);
+            editor.apply();        // As yet no other preferences to be set
+
+            ProgrammePicker programmePicker = new ProgrammePicker();
+            programmePicker.show(getFragmentManager(), ProgrammePicker.TAG);
+
+        }
+
+        try {
+            TEST_QUESTION_JSON = new JSONObject().put(ESM_Question.KEY_ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.KEY_QUESTION, "Is this a question?").put(ESM_Question.KEY_INSTRUCTIONS, "Put some words");
+            TEST_QUESTION = ESM_Question.getESMQuestion(TEST_QUESTION_JSON);
+            TEST_QUESTIONNAIRE_JSON = new JSONArray()
+                    .put( new JSONObject().put(ESM_Question.KEY_ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.KEY_QUESTION, "Is this a question?").put(ESM_Question.KEY_INSTRUCTIONS, "Put some words") )
+                    .put( new JSONObject().put(ESM_Question.KEY_ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.KEY_QUESTION, "What about this?").put(ESM_Question.KEY_INSTRUCTIONS, "Put some other words") );
+            TEST_QUESTIONNAIRE = new ESM_Questionnaire().create("Test",TEST_QUESTIONNAIRE_JSON);
+        } catch (JSONException e) {
+            Log.e(TAG, "BIG PROBLEM!");
+        }
+
+        FragmentManager fragmentManager = getSupportFragmentManager();
+
+        mQuestionContainer = fragmentManager.findFragmentById(R.id.questionnaire_container);
+        if (null == mQuestionContainer) {
+            mQuestionContainer = TEST_QUESTIONNAIRE;
+            fragmentManager.beginTransaction().add(R.id.questionnaire_container, mQuestionContainer).commit();
+        }
+
     }
 
+    @Override
+    public void onDismiss(DialogInterface dialogInterface) {
+        // Set sProgrammeId from newly stored preference
+        sProgrammeId = sPreferences.getString(KEY_PROGRAMME_ID, "ERROR");
+        Log.d(TAG, "Setting programme ID: " + sProgrammeId);
+    }
 }
 
 // TODO PRIORITY Proper tagging, extras and logging
