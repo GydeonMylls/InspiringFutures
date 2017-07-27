@@ -32,6 +32,7 @@ import org.json.JSONObject;
 
 import uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Question;
 import uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Questionnaire;
+import uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text;
 
 /**
  * <p> Created by Gideon Mills on 11/07/2017 for InspiringFutures. </p>
@@ -42,11 +43,6 @@ public class MainActivity extends AppCompatActivity implements DialogInterface.O
     public static final String KEY_DEVICE_ID = "device_id";
     public static final String KEY_PROGRAMME_ID = "programme_id";
     private static SharedPreferences sPreferences;
-
-    private static JSONArray TEST_QUESTIONNAIRE_JSON;
-    private static ESM_Questionnaire TEST_QUESTIONNAIRE;
-    private static JSONObject TEST_QUESTION_JSON;
-    private static ESM_Question TEST_QUESTION;
 
     private static String sDeviceId;
     private static String sProgrammeId;
@@ -68,31 +64,32 @@ public class MainActivity extends AppCompatActivity implements DialogInterface.O
 
         sPreferences = getPreferences(MODE_PRIVATE);
 
-        if (false) { //(sPreferences.contains(KEY_DEVICE_ID)) { TODO Uncomment this
+        if (sPreferences.contains(KEY_DEVICE_ID)) {
             sDeviceId = sPreferences.getString(KEY_DEVICE_ID, null);
             Log.d(TAG, "Found device ID: " + sDeviceId);
+        } else {
+            sDeviceId = InstanceID.getInstance(getApplicationContext()).getId();
+            Log.d(TAG, "No device ID found, setting ID: " + sDeviceId);
+            sPreferences.edit().putString(KEY_DEVICE_ID, sDeviceId).apply();
+        }
+
+        if (sPreferences.contains(KEY_PROGRAMME_ID)) {
             sProgrammeId = sPreferences.getString(KEY_PROGRAMME_ID, null);
             Log.d(TAG, "Found programme ID: " + sProgrammeId);
         } else {
-            Log.d(TAG, "No preferences found, initialising");
-            SharedPreferences.Editor editor = sPreferences.edit();
-            sDeviceId = InstanceID.getInstance(getApplicationContext()).getId();
-            Log.d(TAG, "Setting device ID: " + sDeviceId);
-            editor.putString(KEY_DEVICE_ID, sDeviceId);
-            editor.apply();        // As yet no other preferences to be set
-
-            ProgrammePicker programmePicker = new ProgrammePicker();
-            programmePicker.show(getFragmentManager(), ProgrammePicker.TAG);
-
+            Log.d(TAG, "No programme ID found, displaying selection dialog");
+            new ProgrammePicker().show(getFragmentManager(), ProgrammePicker.TAG);
         }
 
+        ESM_Questionnaire TEST_QUESTIONNAIRE = null;
         try {
-            TEST_QUESTION_JSON = new JSONObject().put(ESM_Question.KEY_ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.KEY_QUESTION, "Is this a question?").put(ESM_Question.KEY_INSTRUCTIONS, "Put some words");
-            TEST_QUESTION = ESM_Question.getESMQuestion(TEST_QUESTION_JSON);
-            TEST_QUESTIONNAIRE_JSON = new JSONArray()
-                    .put( new JSONObject().put(ESM_Question.KEY_ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.KEY_QUESTION, "Is this a question?").put(ESM_Question.KEY_INSTRUCTIONS, "Put some words") )
-                    .put( new JSONObject().put(ESM_Question.KEY_ESM_TYPE, "uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text").put(ESM_Question.KEY_QUESTION, "What about this?").put(ESM_Question.KEY_INSTRUCTIONS, "Put some other words") );
-            TEST_QUESTIONNAIRE = new ESM_Questionnaire().create("Test",TEST_QUESTIONNAIRE_JSON);
+
+            ESM_Text TEXT_QUESTION = (ESM_Text) new ESM_Text().question("Text question"); //.instructions("Enter free form text");
+            JSONArray TEST_QUESTIONS_JSON = new JSONArray()
+                    .put( TEXT_QUESTION.toJSON() )
+                    ;
+            JSONObject TEST_QUESTIONNAIRE_JSON = new JSONObject().put(ESM_Questionnaire.KEY_QUESTIONNAIRE_ID, "diary_test").put(ESM_Questionnaire.KEY_QUESTIONS_ARRAY, TEST_QUESTIONS_JSON);
+            TEST_QUESTIONNAIRE = new ESM_Questionnaire().create(TEST_QUESTIONNAIRE_JSON);
         } catch (JSONException e) {
             Log.e(TAG, "BIG PROBLEM!");
         }

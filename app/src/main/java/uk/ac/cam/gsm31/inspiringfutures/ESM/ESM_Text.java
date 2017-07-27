@@ -35,6 +35,7 @@ import uk.ac.cam.gsm31.inspiringfutures.R;
 public class ESM_Text extends ESM_Question {
 
     public static final String TAG = "ESM_Text";
+    private static final String DEFAULT_INSTRUCTIONS = "Enter text...";
 
     private TextView mQuestion;
     private EditText mResponse;
@@ -55,6 +56,11 @@ public class ESM_Text extends ESM_Question {
 
         mResponse = view.findViewById(R.id.esm_response);
         mResponse.setHint(instructions());
+    }
+
+    @Override
+    public String getDefaultInstructions() {
+        return DEFAULT_INSTRUCTIONS;
     }
 
     @Override
