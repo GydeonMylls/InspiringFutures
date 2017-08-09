@@ -50,12 +50,12 @@ public class ESM_Text extends ESM_Question {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Can't use dialog title as it cuts off long strings
         mQuestion = view.findViewById(R.id.esm_question);
         mQuestion.setText(question());
 
         mResponse = view.findViewById(R.id.esm_response);
         mResponse.setHint(instructions());
+        mResponse.requestFocus();
     }
 
     @Override
@@ -69,4 +69,7 @@ public class ESM_Text extends ESM_Question {
             return mResponse.getText().toString();
         } else { return null; }
     }
+
+    // TODO Have keyboard close upon leaving question
+
 }

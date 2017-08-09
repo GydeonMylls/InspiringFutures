@@ -27,6 +27,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -108,6 +109,7 @@ public class ProgrammePicker extends DialogFragment {
         // Cannot use app unless participating in a programme
         Log.d(TAG, "User has declined to select a programme, closing app");
         super.onCancel(dialog);
+        Toast.makeText(getActivity(), R.string.programme_picker_cancel, Toast.LENGTH_SHORT).show();
         getActivity().finish();
     }
 

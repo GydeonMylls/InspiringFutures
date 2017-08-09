@@ -23,6 +23,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.iid.InstanceID;
 
@@ -30,8 +31,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Question;
+import java.util.Arrays;
+
+import uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_CheckBoxes;
 import uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Questionnaire;
+import uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Radios;
 import uk.ac.cam.gsm31.inspiringfutures.ESM.ESM_Text;
 
 /**
@@ -84,9 +88,16 @@ public class MainActivity extends AppCompatActivity implements DialogInterface.O
         ESM_Questionnaire TEST_QUESTIONNAIRE = null;
         try {
 
-            ESM_Text TEXT_QUESTION = (ESM_Text) new ESM_Text().question("Text question"); //.instructions("Enter free form text");
+            ESM_Text TEXT_QUESTION = (ESM_Text) new ESM_Text().question("Text question");
+            ESM_Radios RADIO_QUESTION = (ESM_Radios) new ESM_Radios().options( new String[] {"Option 1","Option 2","Option 3","Option 4","Option 5","Option 6","Option 7","Option 8","Option 9"} )
+                    .question("Radio question");
+            ESM_CheckBoxes CHECKS_QUESTION = new ESM_CheckBoxes();
+            CHECKS_QUESTION.options( new String[] {"Option 1","Option 2","Option 3","Option 4","Option 5","Option 6","Option 7","Option 8","Option 9"} );
+            CHECKS_QUESTION.question("Checkboxes question");
             JSONArray TEST_QUESTIONS_JSON = new JSONArray()
                     .put( TEXT_QUESTION.toJSON() )
+                    .put( RADIO_QUESTION.toJSON() )
+                    .put( CHECKS_QUESTION.toJSON() )
                     ;
             JSONObject TEST_QUESTIONNAIRE_JSON = new JSONObject().put(ESM_Questionnaire.KEY_QUESTIONNAIRE_ID, "diary_test").put(ESM_Questionnaire.KEY_QUESTIONS_ARRAY, TEST_QUESTIONS_JSON);
             TEST_QUESTIONNAIRE = new ESM_Questionnaire().create(TEST_QUESTIONNAIRE_JSON);
@@ -101,6 +112,11 @@ public class MainActivity extends AppCompatActivity implements DialogInterface.O
             mQuestionContainer = TEST_QUESTIONNAIRE;
             fragmentManager.beginTransaction().add(R.id.questionnaire_container, mQuestionContainer).commit();
         }
+
+        byte[] test = new byte[10];
+        String st = Arrays.toString(test);
+        st = st.substring(1,st.length()-1);
+        Toast.makeText(this, st, Toast.LENGTH_LONG).show();
 
     }
 

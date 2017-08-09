@@ -22,4 +22,5 @@
     <string name="next_button">Next</string>
     <string name="programme_picker_instructions">Please select the programme you are participating in</string>
     <string name="programmes">[\"Geese Theatre\",\"Clean Break\",\"Good Vibrations\",\"Only Connect\",\"MIP\",\"Open Clasp\",\"Koestler Trust\"]</string>
+    <string name="programme_picker_cancel">You must select a programme to use this app</string>
 </resources>

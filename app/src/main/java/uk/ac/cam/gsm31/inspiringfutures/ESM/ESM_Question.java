@@ -17,6 +17,7 @@
 package uk.ac.cam.gsm31.inspiringfutures.ESM;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -41,7 +42,7 @@ public abstract class ESM_Question extends Fragment {
     public static final String KEY_QUESTION = "question";
     public static final String KEY_INSTRUCTIONS = "instructions";
 
-    private JSONObject mJSON;
+    protected JSONObject mJSON;
 
     public ESM_Question() {
         super();
@@ -96,7 +97,7 @@ public abstract class ESM_Question extends Fragment {
         try {
             q = (String) mJSON.get(KEY_QUESTION);
         } catch (JSONException e) {
-            Log.e(TAG, "JSON does not contain KEY_QUESTION, adding blank string");
+            Log.e(TAG, "JSON does not contain question, adding blank string");
             try {
                 mJSON.put(KEY_QUESTION, q);
             } catch (JSONException e1) {
@@ -129,30 +130,32 @@ public abstract class ESM_Question extends Fragment {
     }
 
     /**
-     * Setter for question text, for testing purposes only.
+     * Setter for question text.
      *
      * @param question    Text of question
      * @return Updated question object, must be cast back to it's true type
      */
-    public ESM_Question question(String question) {
+    public ESM_Question question(@NonNull String question) {
         try {
             mJSON.put(KEY_QUESTION, question);
         } catch (JSONException e) {
+            // Can't see why this should ever happen
             e.printStackTrace();
         }
         return this;
     }
 
     /**
-     * Setter for question instructions, for testing purposes only.
+     * Setter for question instructions.
      *
      * @param instructions    Text of instructions
      * @return Updated question object, must be cast back to it's true type
      */
-    public ESM_Question instructions(String instructions) {
+    public ESM_Question instructions(@NonNull String instructions) {
         try {
             mJSON.put(KEY_INSTRUCTIONS, instructions);
         } catch (JSONException e) {
+            // Can't see why this should ever happen
             e.printStackTrace();
         }
         return this;
@@ -164,7 +167,7 @@ public abstract class ESM_Question extends Fragment {
      * @param json    ESM question as a JSONObject
      * @return Updated question object, allows chaining
      */
-    public ESM_Question fromJSON(JSONObject json) {
+    public ESM_Question fromJSON(@NonNull JSONObject json) {
         mJSON = json;
         return this;
     }
@@ -178,9 +181,28 @@ public abstract class ESM_Question extends Fragment {
         return mJSON;
     }
 
+    /**
+     * Used if no instructions are provided.
+     *
+     * @return Default instructions for this question type.
+     */
     public abstract String getDefaultInstructions();
 
-    public abstract String getResponse();       // TODO Extend to images, video, audio
+    /**
+     * Returns user response to question
+     *
+     * @return Response must be one of byte[], Boolean, Byte, Double, Float, Integer, Long, Short, String
+     */
+    public abstract Object getResponse();
+
+//    /**
+//     * Inserts user response to question into a ContentValues object as an appropriate type
+//     *
+//     * @param values    Set into which to insert response
+//     * @param key       Key with which to insert
+//     * @return      Updated set
+//     */
+//    public abstract ContentValues insertResponse(ContentValues values, String key);
 
     /**
      * Creates an ESM question from a JSON, automatically detecting and instantiating the correct question type. Question types are stored as full class names to facilitate this.
