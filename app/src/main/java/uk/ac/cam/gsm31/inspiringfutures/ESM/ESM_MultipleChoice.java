@@ -18,10 +18,14 @@ package uk.ac.cam.gsm31.inspiringfutures.ESM;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.view.View;
+import android.widget.CompoundButton;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import uk.ac.cam.gsm31.inspiringfutures.R;
 
 /**
  * Parent class for ESM questions that present options to the user
@@ -33,12 +37,37 @@ public abstract class ESM_MultipleChoice extends ESM_Question {
 
     public static final String TAG = "ESM_MultipleChoice";
     public static final String KEY_OPTIONS = "esm_options";
+    private static final String KEY_BUNDLE_BUTTONS_TEXT = "buttons_text";
 
-    protected String[] mOptions;
+    protected String[] mOptions;        // Only directly access to modify elements
+    protected CompoundButton[] mButtons;
+    private String[] mButtonsText;
+
+    protected final CompoundButton.OnClickListener mOtherListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            if ( !( (CompoundButton) view).isChecked() ) {
+                ( (CompoundButton) view).setText( getString(R.string.other) );
+            } else {
+                new ESM_MultipleChoice_Other().setButton((CompoundButton) view).show(getChildFragmentManager(), TAG);
+            }
+        }
+    };
+
+    protected final CompoundButton.OnClickListener mCompulsoryOtherListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            if ( !( (CompoundButton) view).isChecked() ) {
+                ( (CompoundButton) view).setText( getString(R.string.other) );
+            } else {
+                new ESM_MultipleChoice_Other().setButton((CompoundButton) view).setCompulsory(true).show(getChildFragmentManager(), TAG);
+            }
+        }
+    };
 
     /**
      * Getter for multiple choice options, adds an empty array if no options found.
-     * @return Options for multipl choice
+     * @return Options for multiple choice
      */
     public String[] options() {
         if (null == mOptions) {
@@ -69,18 +98,47 @@ public abstract class ESM_MultipleChoice extends ESM_Question {
      * @return  Updated question object
      */
     public ESM_MultipleChoice options(@NonNull String[] options) {
-        try {
-            mOptions = options;
-            JSONArray a = new JSONArray();
-            for (int i=0; i<options.length; i++) {
-                a.put(i, options[i]);
+        if (1 < options.length) {
+            try {
+                mOptions = options;
+                JSONArray a = new JSONArray();
+                for (int i=0; i<options.length; i++) {
+                    a.put(i, options[i]);
+                }
+                mJSON.put(KEY_OPTIONS, a);
+            } catch (JSONException e) {
+                // Can't see why this should ever happen
+                e.printStackTrace();
             }
-            mJSON.put(KEY_OPTIONS, a);
-        } catch (JSONException e) {
-            // Can't see why this should ever happen
-            e.printStackTrace();
+            return this;
+        } else {
+            return options(options[0]);
         }
-        return this;
+    }
+
+    /**
+     * Setter for multiple choice options.
+     * @param options    List of options, seperated by the divider string
+     * @param divider    String that separates options
+     * @return  Updated object
+     */
+    public ESM_MultipleChoice options(@NonNull String options, @NonNull String divider) {
+        String[] opts = options.split(divider);
+        for (String s : opts) { s.trim(); }
+        return options(opts);
+    }
+
+    /**
+     * Setter for multiple choice options.
+     * @param options    List of options, seperated either by a comma (,) or a return character (\n)
+     * @return Updated options
+     */
+    public ESM_MultipleChoice options(@NonNull String options) {
+        if (options.contains("\n")) {
+            return options(options, "\n");
+        } else {
+            return options(options, ", ");
+        }
     }
 
     @Override
@@ -89,4 +147,27 @@ public abstract class ESM_MultipleChoice extends ESM_Question {
         options();
         return this;
     }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (null == mButtonsText) {
+            mButtonsText = new String[ mButtons.length ];
+        }
+        for (int i=0; i<mButtons.length; i++) {
+            mButtonsText[i] = mButtons[i].getText().toString();
+        }
+    }
+
+    /**
+     * Restores the user text in Other options
+     */
+    protected void restoreButtonsText() {
+        if ( (null != mButtons) && (null != mButtonsText) ) {
+            for (int i=0; i<mButtons.length; i++) {
+                mButtons[i].setText( mButtonsText[i] );
+            }
+        }
+    }
+
 }

@@ -22,23 +22,42 @@ package uk.ac.cam.gsm31.inspiringfutures.LocalDatabase;
 
 public class LocalDatabaseSchema {
 
-    public static final class DiaryTable {
-        public static final String NAME = "diary_test";
+    // TODO Do I need column names?
+
+    public static final String DATABASE_NAME = "inspiringfutures.db";
+    public static final int DATABASE_VERSION = 1;
+
+    public static final class ResponsesTable {
+        public static final String NAME = "Responses_Table";
 
         public static final class Columns {
             public static final String DEVICE_ID = "device_id";
             public static final String QUESTIONNAIRE_ID = "questionnaire_id";
             public static final String TIMESTAMP = "timestamp";
             public static final String TRANSMITTED = "transmitted";
-            public static final String TEXT_QUESTION = "text_question";
-            public static final String RADIO_QUESTOIN = "radio_question";
-            public static final String CHECKBOXES_QUESTION = "checkboxes_questions";
-            public static final String FACE_QUESTION = "faces_question";
-            public static final String SLIDER_QUESTION = "slider_question";
-            public static final String STARS_QUESTION = "stars_question";
-            public static final String PHOTO_QUESTION = "photo_question";
-            public static final String VIDEO_QUESTION = "video_question";
-            public static final String AUDIO_QUESTION = "audio_question";
+            public static final String RESPONSES = "responses";
         }
+
+//    public static final class DiaryTable {
+//        public static final String NAME = "diary_test";
+//        public static final int NUMBER_OF_QUESTIONS = 2;
+//        public static final String COLUMN_NAME = "question";
+////        public static final class Columns {
+////            public static final String TEXT_QUESTION = "question1";
+////            public static final String RADIO_QUESTION = "question2";
+////            public static final String CHECKBOXES_QUESTION = "question3";
+////            public static final String FACE_QUESTION = "question4";
+////            public static final String SLIDER_QUESTION = "question5";
+////            public static final String STARS_QUESTION = "question6";
+////            public static final String PHOTO_QUESTION = "question7";
+////            public static final String VIDEO_QUESTION = "question8";
+////            public static final String AUDIO_QUESTION = "question9";
+////        }
+//
+//    }
+//
+//    public static final class OthersTable {
+//        public static final String NAME = "others_test";
+//        public static final String COLUMNS = "question";
     }
 }

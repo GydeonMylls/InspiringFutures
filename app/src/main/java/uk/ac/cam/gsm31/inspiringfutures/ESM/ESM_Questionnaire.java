@@ -28,13 +28,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,7 +45,6 @@ import uk.ac.cam.gsm31.inspiringfutures.LocalDatabase.LocalDatabaseHelper;
 import uk.ac.cam.gsm31.inspiringfutures.LocalDatabase.LocalDatabaseSchema;
 import uk.ac.cam.gsm31.inspiringfutures.MainActivity;
 import uk.ac.cam.gsm31.inspiringfutures.R;
-import uk.ac.cam.gsm31.inspiringfutures.util.InvalidTypeException;
 import uk.ac.cam.gsm31.inspiringfutures.util.JSONContentValues;
 
 /**
@@ -65,6 +67,7 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
     private int mCurrentQuestionIndex;
     private Button mNextButton;
     private Button mBackButton;
+    private TextView mQuestionCount;
 
     private FragmentManager mFragmentManager;
 
@@ -75,7 +78,7 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
      * @return  This object with ID and questions loaded
      * @throws JSONException One or more items in the array do not represent valid questions
      */
-    public ESM_Questionnaire create(String ID, JSONArray questions) throws JSONException {
+    public ESM_Questionnaire create(@NonNull String ID, @NonNull JSONArray questions) throws JSONException {
         mID = ID;
         mJSONQuestions = questions;
         mQuestions = listify(mJSONQuestions);
@@ -84,24 +87,39 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
         return this;
     }
 
-    /** Initialise a questionnaire from an array of questions, generating a random id
-     *
+    /**
      * @param questions    Array of questions in JSON representation
-     * @return  This object with questions loaded
+     * @return  This object with questions loaded and randomly generated ID
      * @throws JSONException One or more items in the array does not represent a valid question
      */
-    public ESM_Questionnaire create(JSONArray questions) throws JSONException {
+    public ESM_Questionnaire create(@NonNull JSONArray questions) throws JSONException {
         return create(UUID.randomUUID().toString(), questions);
     }
 
     /**
-     * Initialises a questionnaire from an ID and an array of questions stored in a JSONObject
-     * @param json    Contains ID and questions under appropriate keys
+     * @param json    JSON containing ID and questions under appropriate keys
      * @return  This object with questions and ID loaded
      * @throws JSONException Value missing from JSONObject or one or more items in array do not represent valid questions
      */
-    public ESM_Questionnaire create(JSONObject json) throws JSONException {
+    public ESM_Questionnaire create(@NonNull JSONObject json) throws JSONException {
         return create( json.getString(KEY_QUESTIONNAIRE_ID), json.getJSONArray(KEY_QUESTIONS_ARRAY) );
+    }
+
+    /**
+     * @param string    String JSON representation of a questionnaire or an array of questions
+     * @return  This object with questions and ID loaded
+     * @throws JSONException String does not represent a valid questionnaire or array of questions, one or more values are missing from JSONObject or one or more items in array do not represent valid questions
+     */
+    public ESM_Questionnaire create(@NonNull String string) throws JSONException {
+        try {
+            return create( new JSONObject(string) );
+        } catch (JSONException e) {
+            try {
+                return create( new JSONArray(string) );
+            } catch (JSONException e1) {
+                throw new JSONException(string+" does not represent a valid questionnaire or array of questions");
+            }
+        }
     }
 
     @Override
@@ -131,13 +149,14 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
         mNextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "Received response for question " + mCurrentQuestionIndex);
-                Toast.makeText(getActivity(), "Response: "+mCurrentQuestion.getResponse().toString(), Toast.LENGTH_SHORT).show();
-                mCurrentQuestionIndex++;
-                if (mCurrentQuestionIndex < mQuestions.size()) {
-                    loadQuestion(mCurrentQuestionIndex);
+                if (mCurrentQuestion.compulsory()) {
+                    if (mCurrentQuestion.isAnswered()) {
+                        nextQuestion();
+                    } else {
+                        Toast.makeText(getActivity(), R.string.esm_compulsory, Toast.LENGTH_SHORT).show();
+                    }
                 } else {
-                    submitResponses();
+                    nextQuestion();
                 }
             }
         });
@@ -156,6 +175,8 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
                 }
             }
         });
+
+        mQuestionCount = view.findViewById(R.id.question_count);
 
         mFragmentManager = getChildFragmentManager();
         if (null == mFragmentManager.findFragmentById(R.id.question_container)) {
@@ -193,11 +214,14 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
         mCurrentQuestion = mQuestions.get(index);
         setupNextButton();
         setupPreviousButton();
-        mFragmentManager.beginTransaction().replace(R.id.question_container, mCurrentQuestion, ESM_Question.TAG).commit();
+        setupQuestionCount();
+        mFragmentManager.beginTransaction()
+                .replace(R.id.question_container, mCurrentQuestion, ESM_Question.TAG)
+                .commit();
     }
 
     /**
-     * Sets mNextButton's text depending on question number
+     * Set mNextButton's text depending on question number
      */
     private void setupNextButton() {
         if (null != mNextButton) {
@@ -226,6 +250,24 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
     }
 
     /**
+     * Set question counter
+     */
+    private void setupQuestionCount() {
+        mQuestionCount.setText( (mCurrentQuestionIndex+1) + "/" + mQuestions.size() );
+    }
+
+    private void nextQuestion() {
+        Log.d(TAG, "Received response for question " + mCurrentQuestionIndex);
+        Toast.makeText(getActivity(), "Response: "+mCurrentQuestion.getResponse().toString(), Toast.LENGTH_SHORT).show();
+        mCurrentQuestionIndex++;
+        if (mCurrentQuestionIndex < mQuestions.size()) {
+            loadQuestion(mCurrentQuestionIndex);
+        } else {
+            submitResponses();
+        }
+    }
+
+    /**
      * Commits user responses
      */
     private void submitResponses() {
@@ -233,12 +275,8 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
 
         SQLiteDatabase db = new LocalDatabaseHelper( getContext().getApplicationContext() )
                 .getWritableDatabase();
-        try{
-            if (LocalDatabaseSchema.DiaryTable.NAME == mID) {
-                db.insert(LocalDatabaseSchema.DiaryTable.NAME, null, getContentValues() );
-            } else{
-                // TODO
-            }
+        try {
+            db.insert(LocalDatabaseSchema.ResponsesTable.NAME, null, getContentValues());
             Toast.makeText(getActivity(), R.string.submission_toast, Toast.LENGTH_SHORT).show();
         } finally {
             db.close();
@@ -248,59 +286,39 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
 
     private ContentValues getContentValues() {
         ContentValues values = new ContentValues();
-        values.put(LocalDatabaseSchema.DEVICE_ID, ((MainActivity) getActivity()).getDeviceId() );
-        values.put(LocalDatabaseSchema.QUESTIONNAIRE_ID, this.mID);
+        values.put(LocalDatabaseSchema.ResponsesTable.Columns.DEVICE_ID, MainActivity.getDeviceId() );
+        values.put(LocalDatabaseSchema.ResponsesTable.Columns.QUESTIONNAIRE_ID, this.mID);
+        values.put(LocalDatabaseSchema.ResponsesTable.Columns.TIMESTAMP, DateFormat.getDateTimeInstance().format( new Date() ) );
+        values.put(LocalDatabaseSchema.ResponsesTable.Columns.TRANSMITTED, false);
+        values.put(LocalDatabaseSchema.ResponsesTable.Columns.RESPONSES, getResponsesAsString());
+        return values;
+    }
+
+//    private void putResponses(ContentValues values) {
+//        for (int i=0; i<mQuestions.size(); i++) {
+//            Object response = mQuestions.get(i).getResponse();
+//            if (null != response) {
+//                JSONContentValues.putContentValues(values, LocalDatabaseSchema.DiaryTable.COLUMN_NAME+i, response );
+//            } else {
+//                Log.d(TAG, "getContentValues failed, one or more questions are not fully initialised and returned null to getResponse()");
+//                return;
+//            }
+//        }
+//        return;
+//    }
+
+    private String getResponsesAsString() {
+        JSONContentValues values = new JSONContentValues();
         for (int i=0; i<mQuestions.size(); i++) {
             Object response = mQuestions.get(i).getResponse();
             if (null != response) {
-                putContentValues(values, "question"+i, response );
+                JSONContentValues.putJSONContentValues(values, "question"+i, response );
             } else {
                 Log.d(TAG, "getContentValues failed, one or more questions are not fully initialised and returned null to getResponse()");
                 return null;
             }
         }
-        return values;
-    }
-
-//    byte[], Boolean, Byte, Double, Float, Integer, Long, Short, String
-    private String getResponsesAsString() {
-        JSONArray out = new JSONArray();
-
-        // TODO
-        return null;
-    }
-
-    /**
-     * Helper method to insert key-value pairs into a ContentValues object, where the value is of an unknown but valid type.
-     *
-     * <p>This only exists because ContentValues accepts a limited number of types and no more elegant solution exists</p>
-     *
-     * @param values    Object into which to insert
-     * @param key       Key
-     * @param value     Value, must be one of byte[], Boolean, Byte, Double, Float, Integer, Long, Short, String
-     */
-    private void putContentValues(@NonNull ContentValues values,@NonNull String key,@NonNull Object value ) {
-        if (value instanceof Short) {
-            values.put(key, (Short) value);
-        } else if (value instanceof Long) {
-            values.put(key, (Long) value);
-        } else if (value instanceof Double) {
-            values.put(key, (Double) value);
-        } else if (value instanceof Integer) {
-            values.put(key, (Integer) value);
-        } else if (value instanceof String) {
-            values.put(key, (String) value);
-        } else if (value instanceof Boolean) {
-            values.put(key, (Boolean) value);
-        } else if (value instanceof Float) {
-            values.put(key, (Float) value);
-        } else if (value instanceof byte[]) {
-            values.put(key, (byte[]) value);
-        } else if (value instanceof Byte) {
-            values.put(key, (Byte) value);
-        } else {
-            throw new InvalidTypeException(JSONContentValues.INVALID_CONTENT_VALUES_TYPE);
-        }
+        return values.toString();
     }
 
     // TODO URGENT Loses references to buttons on rotation, button text vanishes

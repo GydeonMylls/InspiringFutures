@@ -16,10 +16,11 @@
 
 package uk.ac.cam.gsm31.inspiringfutures.ESM;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.Html;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import uk.ac.cam.gsm31.inspiringfutures.R;
@@ -30,41 +31,46 @@ import uk.ac.cam.gsm31.inspiringfutures.R;
  * <p> Created by Gideon Mills on 10/07/2017 for InspiringFutures. </p>
  */
 
-public class ESM_Text extends ESM_Question {
+public class ESM_Info extends ESM_Question {
 
     public static final String TAG = "ESM_Text";
-    private static final int LAYOUT_ID = R.layout.esm_text;
+    private static final int LAYOUT_ID = R.layout.esm_info;
 
-    private TextView mQuestion;
-    private EditText mResponse;
+    private TextView mTitle;
+    private TextView mContent;
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        mQuestion = view.findViewById(R.id.esm_question);
-        mQuestion.setText(question());
+        mTitle = view.findViewById(R.id.esm_title);
+        if (!question().isEmpty()) {
+            mTitle.setText(question());
+        } else {
+            mTitle.setVisibility(View.GONE);
+        }
 
-        mResponse = view.findViewById(R.id.esm_response);
-        mResponse.setHint(instructions());
-        mResponse.requestFocus();
+        mContent = view.findViewById(R.id.esm_content);
+        mContent.setText(
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                        ? Html.fromHtml(instructions(), Html.FROM_HTML_MODE_COMPACT)
+                        : Html.fromHtml(instructions())
+        );
     }
 
     @Override
     public String getDefaultInstructions() {
-        return getString(R.string.esm_text_default_instructions);
+        return "";
     }
 
     @Override
     public String getResponse() {
-        if (null != mResponse) {
-            return mResponse.getText().toString();
-        } else { return null; }
+        return "";
     }
 
     @Override
     public boolean isAnswered() {
-        return (null != mResponse) && !mResponse.getText().toString().isEmpty();
+        return true;
     }
 
     @Override
