@@ -18,13 +18,15 @@ package uk.ac.cam.gsm31.inspiringfutures.ESM;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.view.LayoutInflater;
+import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import org.json.JSONException;
 
 import uk.ac.cam.gsm31.inspiringfutures.R;
 
@@ -35,19 +37,47 @@ import uk.ac.cam.gsm31.inspiringfutures.R;
 public class ESM_CheckBoxes extends ESM_MultipleChoice {
 
     public static final String TAG = "ESM_CheckBoxes";
-    private static final String DEFAULT_INSTRUCTIONS = "Select one or more";
+    public static final String KEY_MAX_SELECTION = "max_selection";
+    private static final int LAYOUT_ID = R.layout.esm_checkboxes;
 
     private TextView mQuestion;
     private TextView mInstructions;
     private LinearLayout mCheckBoxesGroup;
-    private CheckBox[] mCheckBoxesArray;
 
     private boolean[] mChecked;
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.esm_checkboxes, container, false);
+    /**
+     * @return Maximum number of options that may be submitted
+     */
+    public int maxSelection() {
+        int i = this.options().length;
+        try {
+            i = (int) mJSON.get(KEY_MAX_SELECTION);
+        } catch (JSONException e) {
+            Log.e(TAG, "JSON does not contain maximum selection, setting to total number of options");
+            try {
+                mJSON.put(KEY_INSTRUCTIONS, i);
+            } catch (JSONException e1) {
+                // Can never happen
+                e1.printStackTrace();
+            }
+        }
+        return i;
+    }
+
+    /**
+     *
+     * @param maxSelection Maximum number of options that may be submitted
+     * @return Updated question object
+     */
+    public ESM_CheckBoxes maxSelection(int maxSelection) {
+        try {
+            mJSON.put(KEY_MAX_SELECTION, maxSelection);
+        } catch (JSONException e) {
+            // Can't see why this should ever happen
+            e.printStackTrace();
+        }
+        return this;
     }
 
     @Override
@@ -60,44 +90,77 @@ public class ESM_CheckBoxes extends ESM_MultipleChoice {
         mInstructions = view.findViewById(R.id.esm_instructions);
         mInstructions.setText(instructions());
 
-        mChecked = new boolean[mOptions.length];
+        if (null == mChecked) {
+            mChecked = new boolean[mOptions.length];
+        }
 
         mCheckBoxesGroup = view.findViewById(R.id.esm_checkboxes);
-        mCheckBoxesArray = new CheckBox[mOptions.length];
+        mButtons = new CheckBox[mOptions.length];
         for (int i=0; i<mOptions.length; i++) {
-            CheckBox option = new CheckBox(getActivity());
+            final CheckBox option = new CheckBox(getActivity());
             option.setText(mOptions[i]);
+
             // Listener to add to and remove from mChecked as applicable
             final int finalI = i;       // Necessary to access i in listener
             option.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                    //  assert !isChecked;
+                    boolean temp = compoundButton.isChecked();
+                    if ( isChecked && (getNumberOfChecked() >= maxSelection() ) ) {
+                        Toast.makeText(getActivity(), getString(R.string.esm_checkboxes_limit_message, maxSelection()), Toast.LENGTH_SHORT).show();
+                        option.setChecked(false);
+                        return;
+                    }
                     mChecked[finalI] = isChecked;
                 }
             });
 
+            if ( options()[i].equalsIgnoreCase( getString(R.string.other) ) || options()[i].equalsIgnoreCase( String.valueOf(ESM_Question.COMPULSORY_FLAG) + getString(R.string.other) ) ) {
+                if (options()[i].equalsIgnoreCase( String.valueOf(ESM_Question.COMPULSORY_FLAG) + getString(R.string.other) )) {
+                    option.setOnClickListener( super.mCompulsoryOtherListener );
+                    option.setText( getString(R.string.other) );
+                } else {
+                    option.setOnClickListener( super.mOtherListener );
+                }
+            }
+
             mCheckBoxesGroup.addView(option);
-            mCheckBoxesArray[i] = option;
+            mButtons[i] = option;
         }
 
+        // Restore selection and text
+        int maxSelection = maxSelection();
+        maxSelection(mOptions.length);
+        for (int i=0; i<mButtons.length; i++) {
+            mButtons[i].setChecked( mChecked[i] );
+        }
+        maxSelection(maxSelection);
+        restoreButtonsText();
+    }
+
+    private int getNumberOfChecked() {
+        int out = 0;
+        for (boolean b : mChecked) {
+            if (b) { out++; }
+        }
+        return out;
     }
 
     @Override
     public String getDefaultInstructions() {
-        return DEFAULT_INSTRUCTIONS;
+        return getString(R.string.esm_checkboxes_default_instructions);
     }
 
     @Override
     public String getResponse() {
-        if (null != mCheckBoxesArray) {
+        if (null != mButtons) {
             String out = "";
-            for (CheckBox box : mCheckBoxesArray) {
+            for (CompoundButton box : mButtons) {
                 if (box.isChecked()) {
                     out += ", " + box.getText();
                 }
             }
-            out = out.substring(2);     // Remove leading ", "
+            if (!out.isEmpty()) out = out.substring(2);     // Remove leading ", "
             return out;
         } else {
             // Fragment not fully intialised, shouldn't ever happen
@@ -106,12 +169,17 @@ public class ESM_CheckBoxes extends ESM_MultipleChoice {
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public boolean isAnswered() {
+        boolean out = false;
+        for (boolean b : mChecked) {
+            out = out || b;
+        }
+        return out;
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
+    public int getLayoutId() {
+        return LAYOUT_ID;
     }
+
 }

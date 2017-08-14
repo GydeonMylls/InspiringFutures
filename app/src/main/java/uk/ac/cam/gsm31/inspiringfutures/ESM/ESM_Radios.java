@@ -18,9 +18,7 @@ package uk.ac.cam.gsm31.inspiringfutures.ESM;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
@@ -33,17 +31,12 @@ import uk.ac.cam.gsm31.inspiringfutures.R;
 public class ESM_Radios extends ESM_MultipleChoice {
 
     public static final String TAG = "ESM_Radios";
-    private static final String DEFAULT_INSTRUCTIONS = "Select one";
+    private static final int LAYOUT_ID = R.layout.esm_radios;
 
     private TextView mQuestion;
     private TextView mInstructions;
     private RadioGroup mRadioGroup;
-
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.esm_radios, container, false);
-    }
+//    private UncheckableRadioButton[] mRadioButtons;
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
@@ -55,25 +48,36 @@ public class ESM_Radios extends ESM_MultipleChoice {
         mInstructions = view.findViewById(R.id.esm_instructions);
         mInstructions.setText(instructions());
 
+        mButtons = new UncheckableRadioButton[ options().length ];
         mRadioGroup = view.findViewById(R.id.esm_radios);
-        for (int i=0; i<mOptions.length; i++) {
-            UncheckableRadioButton option = new UncheckableRadioButton(getActivity());
+        for (int i=0; i<options().length; i++) {
+            final UncheckableRadioButton option = new UncheckableRadioButton(getActivity());
+            mButtons[i] = option;
             option.setId(i);
-            option.setText(mOptions[i]);
+            option.setText(options()[i]);
+            if ( options()[i].equalsIgnoreCase( getString(R.string.other) ) || options()[i].equalsIgnoreCase( String.valueOf(ESM_Question.COMPULSORY_FLAG) + getString(R.string.other) ) ) {
+                if (options()[i].equalsIgnoreCase( String.valueOf(ESM_Question.COMPULSORY_FLAG) + getString(R.string.other) )) {
+                    option.setOnClickListener( super.mCompulsoryOtherListener );
+                    option.setText( getString(R.string.other) );
+                } else {
+                    option.setOnClickListener( super.mOtherListener );
+                }
+            }
             mRadioGroup.addView(option);
         }
+        restoreButtonsText();
     }
 
     @Override
     public String getDefaultInstructions() {
-        return DEFAULT_INSTRUCTIONS;
+        return getString(R.string.esm_radios_default_instructions);
     }
 
     @Override
     public String getResponse() {
         if (null != mRadioGroup){
             if (-1 != mRadioGroup.getCheckedRadioButtonId()) {
-                return mOptions[ mRadioGroup.getCheckedRadioButtonId() ];
+                return mButtons[ mRadioGroup.getCheckedRadioButtonId() ].getText().toString();
             } else {
                 // No option selected, not a problem
                 return "";
@@ -83,5 +87,17 @@ public class ESM_Radios extends ESM_MultipleChoice {
             return null;
         }
     }
+
+    @Override
+    public boolean isAnswered() {
+        return (null != mRadioGroup) && (-1 != mRadioGroup.getCheckedRadioButtonId());
+    }
+
+    @Override
+    public int getLayoutId() {
+        return LAYOUT_ID;
+    }
+
+
 
 }
