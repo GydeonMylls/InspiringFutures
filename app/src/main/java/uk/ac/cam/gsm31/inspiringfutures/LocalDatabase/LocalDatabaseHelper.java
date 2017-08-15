@@ -26,33 +26,24 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class LocalDatabaseHelper extends SQLiteOpenHelper {
 
-    private static LocalDatabaseHelper sLocalDatabaseHelper;
-
-    public static final String DATABASE_NAME = "inspiringfutures";
-    public static final int DATABASE_VERSION = 1;
-
-    public LocalDatabaseHelper getInstance(Context context) {
-        if (null == sLocalDatabaseHelper) {
-            sLocalDatabaseHelper = new LocalDatabaseHelper(context);
-        }
-        return sLocalDatabaseHelper;
-    }
-
-    private LocalDatabaseHelper(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    public LocalDatabaseHelper(Context context) {
+        super(context, LocalDatabaseSchema.DATABASE_NAME, null, LocalDatabaseSchema.DATABASE_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
-        sqLiteDatabase.execSQL("create table " + LocalDatabaseSchema.DiaryTable.NAME + "("
-                + " _id integer primary key autoincrement, "
-                + LocalDatabaseSchema.DiaryTable.Columns.DEVICE_ID + ", "
-                + LocalDatabaseSchema.DiaryTable.Columns.QUESTIONNAIRE_ID + ", "
-                + LocalDatabaseSchema.DiaryTable.Columns.TIMESTAMP + ", "
-                + LocalDatabaseSchema.DiaryTable.Columns.TEXT_QUESTION + ", "
-                + LocalDatabaseSchema.DiaryTable.Columns.TRANSMITTED
-                + ")"
-        );
+        // Create DiaryTable
+        String createString = "create table " + LocalDatabaseSchema.ResponsesTable.NAME + "("
+                + " _id integer primary key autoincrement, " // TODO Do I want this? Use timestamp as primary key?
+                + LocalDatabaseSchema.ResponsesTable.Columns.DEVICE_ID + ", "
+                + LocalDatabaseSchema.ResponsesTable.Columns.QUESTIONNAIRE_ID + ", "
+                + LocalDatabaseSchema.ResponsesTable.Columns.TIMESTAMP + ", "
+                + LocalDatabaseSchema.ResponsesTable.Columns.RESPONSES + ", "
+                + LocalDatabaseSchema.ResponsesTable.Columns.TRANSMITTED
+                ;
+        createString += ")";
+        sqLiteDatabase.execSQL(createString);
+
     }
 
     @Override

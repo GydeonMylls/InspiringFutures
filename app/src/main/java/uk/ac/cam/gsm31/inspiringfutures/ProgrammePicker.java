@@ -27,13 +27,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.Arrays;
 
 /**
  * <p> Created by  Gideon Mills on 24/07/2017 for InspiringFutures. </p>
@@ -43,7 +42,8 @@ public class ProgrammePicker extends DialogFragment {
 
     public static final String TAG = "programme_picker";
 
-    private List<String> mCourses;
+    private String[] mCourses;
+    private RadioGroup mRadioGroup;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -51,32 +51,33 @@ public class ProgrammePicker extends DialogFragment {
 
         setRetainInstance(true);
 
-        mCourses = new ArrayList<String>();
         try {
             String coursesString = getString(R.string.programmes);      // TODO Non-priority: Get courses from remote
             JSONArray coursesJSON = new JSONArray(coursesString);
-            for (int i=0; i<coursesJSON.length(); i++) { mCourses.add((String) coursesJSON.get(i)); }
+            mCourses = new String[ coursesJSON.length() ];
+            for (int i=0; i<coursesJSON.length(); i++) {
+                mCourses[i] = (String) coursesJSON.get(i);
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        Collections.sort(mCourses, String.CASE_INSENSITIVE_ORDER);
+        Arrays.sort(mCourses, String.CASE_INSENSITIVE_ORDER);
 
         View view = getActivity().getLayoutInflater().inflate(R.layout.programme_picker, null);
 
-        final RadioGroup radioGroup = view.findViewById(R.id.programme_picker_radios);
+        mRadioGroup = view.findViewById(R.id.programme_picker_radios);
 
-        for (int i = 0; i < mCourses.size(); i++) {
+        for (int i = 0; i < mCourses.length; i++) {
             RadioButton option = new RadioButton(getActivity());
             option.setId(i);
-            option.setText(mCourses.get(i));
-            radioGroup.addView(option);
+            option.setText(mCourses[i]);
+            mRadioGroup.addView(option);
         }
 
         final Dialog dialog = new AlertDialog.Builder(getActivity())
-                .setView(view)
-                .setPositiveButton("OK", null)  // OnClickListener set below in OnShowListener
-                .create();
-        dialog.setCanceledOnTouchOutside(false);
+            .setView(view)
+            .setPositiveButton(R.string.dialog_submit, null)    // OnClickListener set by OnShowListener to allow button to be clicked without dismissing dialog
+            .create();
 
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
@@ -86,34 +87,43 @@ public class ProgrammePicker extends DialogFragment {
                 positiveButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        if (radioGroup.getCheckedRadioButtonId() != -1) {
+                        if (mRadioGroup.getCheckedRadioButtonId() != -1) {
                             String course;
-                            course = mCourses.get( radioGroup.getCheckedRadioButtonId() );
+                            course = mCourses[ mRadioGroup.getCheckedRadioButtonId() ];
                             getActivity().getPreferences(Context.MODE_PRIVATE)
                                     .edit()
-                                    .putString( ( (MainActivity) getActivity() ).KEY_PROGRAMME_ID, course )
+                                    .putString( MainActivity.KEY_PROGRAMME_ID, course )
                                     .apply();
                             dialog.dismiss();
+                        } else {
+                            // Cannot use app unless participating in a programme
+                            Toast.makeText(getActivity(), R.string.programme_picker_cancel, Toast.LENGTH_SHORT).show();
+//                            dialog.cancel();
                         }
                     }
                 });
             }
         });
 
+        dialog.setCanceledOnTouchOutside(false);
+
         return dialog;
     }
 
     @Override
-    public void onCancel(DialogInterface dialog) {
+    public void onCancel(DialogInterface builder) {
         // Cannot use app unless participating in a programme
         Log.d(TAG, "User has declined to select a programme, closing app");
-        super.onCancel(dialog);
+        super.onCancel(builder);
+        Toast.makeText(getActivity(), R.string.programme_picker_cancel, Toast.LENGTH_SHORT).show();
         getActivity().finish();
     }
 
     @Override
-    public void onDismiss(DialogInterface dialog) {
-        super.onDismiss(dialog);
-        ( (DialogInterface.OnDismissListener) getActivity() ).onDismiss(dialog);
+    public void onDismiss(DialogInterface builder) {
+        super.onDismiss(builder);
+        ( (DialogInterface.OnDismissListener) getActivity() ).onDismiss(builder);
     }
+
+    // TODO Password protection
 }

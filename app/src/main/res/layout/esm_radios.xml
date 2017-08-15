@@ -30,22 +30,23 @@
             android:id="@+id/esm_question"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-
             android:padding="6dp"
             android:textStyle="normal|bold"
             android:textSize="18sp" />
 
-        <EditText
-            android:id="@+id/esm_response"
+        <TextView
+            android:id="@+id/esm_instructions"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:inputType="textMultiLine"
-            android:padding="12dp"
-            android:layout_weight="1"
-            android:gravity="top|start">
+            android:padding="6dp"/>
 
-            <requestFocus />
-        </EditText>
+        <RadioGroup
+            android:id="@+id/esm_radios"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+
+            <!--<requestFocus/>-->
+        </RadioGroup>
 
     </LinearLayout>
 </ScrollView>

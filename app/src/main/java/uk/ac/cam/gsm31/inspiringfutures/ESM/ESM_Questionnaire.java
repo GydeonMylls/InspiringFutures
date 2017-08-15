@@ -16,7 +16,10 @@
 
 package uk.ac.cam.gsm31.inspiringfutures.ESM;
 
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -25,17 +28,24 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import uk.ac.cam.gsm31.inspiringfutures.LocalDatabase.LocalDatabaseHelper;
+import uk.ac.cam.gsm31.inspiringfutures.LocalDatabase.LocalDatabaseSchema;
+import uk.ac.cam.gsm31.inspiringfutures.MainActivity;
 import uk.ac.cam.gsm31.inspiringfutures.R;
+import uk.ac.cam.gsm31.inspiringfutures.util.JSONContentValues;
 
 /**
  * Represents and manages an ordered collection of ESM_QUESTION objects
@@ -52,12 +62,12 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
     private String mID;
     private JSONArray mJSONQuestions;
     private List<ESM_Question> mQuestions;
-    private JSONArray mResponses;
+//    private Object[] mResponses;
     private ESM_Question mCurrentQuestion;
     private int mCurrentQuestionIndex;
     private Button mNextButton;
     private Button mBackButton;
-//    private View.OnClickListener mNextListener;
+    private TextView mQuestionCount;
 
     private FragmentManager mFragmentManager;
 
@@ -66,77 +76,74 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
      * @param ID           Unique identifier for the questionnaire
      * @param questions    Array of questions in JSON representation
      * @return  This object with ID and questions loaded
-     * @throws JSONException One or more items in the array does not represent a valid question
+     * @throws JSONException One or more items in the array do not represent valid questions
      */
-    public ESM_Questionnaire create(String ID, JSONArray questions) throws JSONException {
+    public ESM_Questionnaire create(@NonNull String ID, @NonNull JSONArray questions) throws JSONException {
         mID = ID;
         mJSONQuestions = questions;
         mQuestions = listify(mJSONQuestions);
-        mResponses = new JSONArray();
+//        mResponses = new Object[mJSONQuestions.length()];
         mCurrentQuestionIndex = 0;
         return this;
     }
 
-    /** Initialise a questionnaire from an array of questions, generating a random id
-     *
+    /**
      * @param questions    Array of questions in JSON representation
-     * @return  This object with questions loaded
+     * @return  This object with questions loaded and randomly generated ID
      * @throws JSONException One or more items in the array does not represent a valid question
      */
-    public ESM_Questionnaire create(JSONArray questions) throws JSONException {
+    public ESM_Questionnaire create(@NonNull JSONArray questions) throws JSONException {
         return create(UUID.randomUUID().toString(), questions);
     }
 
     /**
-     * Initialises a questionnaire from an ID and an array of questions stored in a JSONObject
-     * @param json    Contains ID and questions under appropriate keys
+     * @param json    JSON containing ID and questions under appropriate keys
      * @return  This object with questions and ID loaded
-     * @throws JSONException Value missing from JSONObject or one or more items in array does not represent a valid question
+     * @throws JSONException Value missing from JSONObject or one or more items in array do not represent valid questions
      */
-    public ESM_Questionnaire create(JSONObject json) throws JSONException {
+    public ESM_Questionnaire create(@NonNull JSONObject json) throws JSONException {
         return create( json.getString(KEY_QUESTIONNAIRE_ID), json.getJSONArray(KEY_QUESTIONS_ARRAY) );
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.d(TAG, "Creating questionnaire");
-        super.onCreate(savedInstanceState);
-
-        // Retain across configuration changes
-        setRetainInstance(true);
-    }
-
-    @Override
-    public void onDestroy() {
-        Log.d(TAG, "Destroying questionnaire");
-        super.onDestroy();
+    /**
+     * @param string    String JSON representation of a questionnaire or an array of questions
+     * @return  This object with questions and ID loaded
+     * @throws JSONException String does not represent a valid questionnaire or array of questions, one or more values are missing from JSONObject or one or more items in array do not represent valid questions
+     */
+    public ESM_Questionnaire create(@NonNull String string) throws JSONException {
+        try {
+            return create( new JSONObject(string) );
+        } catch (JSONException e) {
+            try {
+                return create( new JSONArray(string) );
+            } catch (JSONException e1) {
+                throw new JSONException(string+" does not represent a valid questionnaire or array of questions");
+            }
+        }
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
         return inflater.inflate(R.layout.esm_questionnaire, container, false);
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "View created");
         mNextButton = view.findViewById(R.id.next_button);
         mNextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                try {
-                    Log.d(TAG, "Received response for question " + mCurrentQuestionIndex);
-                    mResponses.put( mCurrentQuestionIndex, mCurrentQuestion.getResponse());
-                    mCurrentQuestionIndex++;
-                    if (mCurrentQuestionIndex < mQuestions.size()) {
-                        loadQuestion(mCurrentQuestionIndex);
+                if (mCurrentQuestion.compulsory()) {
+                    if (mCurrentQuestion.isAnswered()) {
+                        nextQuestion();
                     } else {
-                        submitResponses();
+                        Toast.makeText(getActivity(), R.string.esm_compulsory, Toast.LENGTH_SHORT).show();
                     }
-                } catch (JSONException e) {
-                    // As far as I can tell this will only occur if mCurrentQuestionIndex is NaN or infinity
-                    // This should never happen
-                    e.printStackTrace();
+                } else {
+                    nextQuestion();
                 }
             }
         });
@@ -155,6 +162,8 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
                 }
             }
         });
+
+        mQuestionCount = view.findViewById(R.id.question_count);
 
         mFragmentManager = getChildFragmentManager();
         if (null == mFragmentManager.findFragmentById(R.id.question_container)) {
@@ -178,11 +187,9 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
         for (int i=0; i< questions.length(); i++) {
             json = (JSONObject) questions.get(i);
             question = ESM_Question.getESMQuestion(json);
-//            question.setQuestionListener(this);
-            questionsList.add(question); // TODO Problem here?
+            questionsList.add(question);
         }
 //        assert questions.length() == mQuestions.size();
-
         return questionsList;
     }
 
@@ -193,12 +200,15 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
     private void loadQuestion(int index) {
         mCurrentQuestion = mQuestions.get(index);
         setupNextButton();
-        setupPreviousButton();
-        mFragmentManager.beginTransaction().replace(R.id.question_container, mCurrentQuestion, mCurrentQuestion.TAG).commit();
+        setupBackButton();
+        setupQuestionCount();
+        mFragmentManager.beginTransaction()
+                .replace(R.id.question_container, mCurrentQuestion, ESM_Question.TAG)
+                .commit();
     }
 
     /**
-     * Sets mNextButton's text depending on question number
+     * Set mNextButton's text depending on question number
      */
     private void setupNextButton() {
         if (null != mNextButton) {
@@ -214,7 +224,7 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
     /**
      * Set mBackButton's visibility depending on question number
      */
-    private void setupPreviousButton() {
+    private void setupBackButton() {
         if (null != mBackButton) {
             if (0 == mCurrentQuestionIndex) {
                 // First question
@@ -227,13 +237,119 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
     }
 
     /**
+     * Set question counter
+     */
+    private void setupQuestionCount() {
+        mQuestionCount.setText( (mCurrentQuestionIndex+1) + "/" + mQuestions.size() );
+    }
+
+    private void nextQuestion() {
+        Log.d(TAG, "Received response for question " + mCurrentQuestionIndex);
+        Toast.makeText(getActivity(), "Response: "+mCurrentQuestion.getResponse().toString(), Toast.LENGTH_SHORT).show();
+        mCurrentQuestionIndex++;
+        if (mCurrentQuestionIndex < mQuestions.size()) {
+            loadQuestion(mCurrentQuestionIndex);
+        } else {
+            submitResponses();
+        }
+    }
+
+    /**
      * Commits user responses
      */
     private void submitResponses() {
         Log.d(TAG, "Submitting responses to " + mCurrentQuestionIndex + " questions");
-        Toast.makeText(getActivity(), R.string.submission_toast, Toast.LENGTH_LONG).show();
-        // TODO
-        getActivity().finish();
+
+        SQLiteDatabase db = new LocalDatabaseHelper( getContext().getApplicationContext() )
+                .getWritableDatabase();
+        try {
+            db.insert(LocalDatabaseSchema.ResponsesTable.NAME, null, getContentValues());
+            Toast.makeText(getActivity(), R.string.submission_toast, Toast.LENGTH_SHORT).show();
+        } finally {
+            db.close();
+            getActivity().finish();
+        }
     }
 
+    private ContentValues getContentValues() {
+        ContentValues values = new ContentValues();
+        values.put(LocalDatabaseSchema.ResponsesTable.Columns.DEVICE_ID, MainActivity.getDeviceId() );
+        values.put(LocalDatabaseSchema.ResponsesTable.Columns.QUESTIONNAIRE_ID, this.mID);
+        values.put(LocalDatabaseSchema.ResponsesTable.Columns.TIMESTAMP, DateFormat.getDateTimeInstance().format( new Date() ) );
+        values.put(LocalDatabaseSchema.ResponsesTable.Columns.TRANSMITTED, false);
+        values.put(LocalDatabaseSchema.ResponsesTable.Columns.RESPONSES, getResponsesAsString());
+        return values;
+    }
+
+//    private void putResponses(ContentValues values) {
+
+    private String getResponsesAsString() {
+        JSONContentValues values = new JSONContentValues();
+        for (int i=0; i<mQuestions.size(); i++) {
+            Object response = mQuestions.get(i).getResponse();
+            if (null != response) {
+                JSONContentValues.putJSONContentValues(values, "question"+i, response );
+            } else {
+                Log.d(TAG, "getContentValues failed, one or more questions are not fully initialised and returned null to getResponse()");
+                return null;
+            }
+        }
+        return values.toString();
+    }
+
+    //    }
+//        return;
+//        }
+//            }
+//                return;
+//                Log.d(TAG, "getContentValues failed, one or more questions are not fully initialised and returned null to getResponse()");
+//            } else {
+//                JSONContentValues.putContentValues(values, LocalDatabaseSchema.DiaryTable.COLUMN_NAME+i, response );
+//            if (null != response) {
+//            Object response = mQuestions.get(i).getResponse();
+//        for (int i=0; i<mQuestions.size(); i++) {
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "Creating questionnaire");
+        super.onCreate(savedInstanceState);
+
+        // Retain across configuration changes
+        setRetainInstance(true);
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d(TAG, "Destroying questionnaire");
+        super.onDestroy();
+    }
+
+    @Override
+    public void onDestroyView() {
+        Log.d(TAG, "View destroyd");
+        super.onDestroyView();
+    }
+
+    //    @Override
+//    public void onAttach(Context context) {
+//        Log.d(TAG, "Attaching");
+//        super.onAttach(context);
+//        if (null != mNextButton) {
+//            setupNextButton();
+//        }
+//        if (null != mBackButton) {
+//            setupBackButton();
+//        }
+//        if (null != mQuestionCount) {
+//            setupQuestionCount();
+//        }
+//    }
+//
+//    @Override
+//    public void onDetach() {
+//        Log.d(TAG, "Detaching");
+//        super.onDetach();
+//    }
+
+    // TODO URGENT Loses references to buttons on rotation, button text vanishes
 }
