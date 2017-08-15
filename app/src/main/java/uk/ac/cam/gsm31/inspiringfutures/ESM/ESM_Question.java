@@ -16,19 +16,27 @@
 
 package uk.ac.cam.gsm31.inspiringfutures.ESM;
 
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.res.ResourcesCompat;
+import android.text.Spannable;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.InvocationTargetException;
+
+import uk.ac.cam.gsm31.inspiringfutures.R;
 
 /**
  * Represents a general ESM question with a JSONObject, essentially just a wrapper for the JSON with some helpful methods. This is the base class for all question types and cannot be instantiated itself.
@@ -106,7 +114,7 @@ public abstract class ESM_Question extends Fragment {
     public String question() {
         String q = "";
         try {
-            compulsory();
+//            compulsory();
             q = mJSON.getString(KEY_QUESTION);
         } catch (JSONException e) {
             Log.e(TAG, "JSON does not contain question, adding blank string");
@@ -137,32 +145,33 @@ public abstract class ESM_Question extends Fragment {
      * @return Boolean to denote whether question is compulsory
      */
     public boolean compulsory() {
-        boolean c = false;
-        try {
-            c = mJSON.getBoolean(KEY_COMPULSORY);
-        } catch (JSONException e) {
-            Log.e(TAG, "JSON does not contain compulsory flag, inferring from question");
-            String question = "";
-            try {
-                question = mJSON.getString(KEY_QUESTION);
-            } catch (JSONException e1) {
-                e1.printStackTrace();
-            }
-            if (question.contains(String.valueOf(COMPULSORY_FLAG))) {
-                Log.d(TAG, "Question contains '"+String.valueOf(COMPULSORY_FLAG)+"' denoting that it is compulsory, setting compulsory flag as true");
-                try {
-                    mJSON.put(KEY_QUESTION, question.replace(String.valueOf(COMPULSORY_FLAG),""));
-                } catch (JSONException e1) {
-                    // Can't see why this would ever happen
-                    e1.printStackTrace();
-                }
-                c = true;
-            } else {
-                Log.d(TAG, "Setting compulsory flag to false");
-            }
-            compulsory(c);
-        }
-        return c;
+//        boolean c = false;
+//        try {
+//            c = mJSON.getBoolean(KEY_COMPULSORY);
+//        } catch (JSONException e) {
+//            Log.e(TAG, "JSON does not contain compulsory flag, inferring from question");
+//            String question = "";
+//            try {
+//                question = mJSON.getString(KEY_QUESTION);
+//            } catch (JSONException e1) {
+//                e1.printStackTrace();
+//            }
+//            if (question.charAt(0) == COMPULSORY_FLAG) {
+//                Log.d(TAG, "Question contains '"+String.valueOf(COMPULSORY_FLAG)+"' denoting that it is compulsory, setting compulsory flag as true");
+//                try {
+//                    mJSON.put(KEY_QUESTION, question);
+//                } catch (JSONException e1) {
+//                    // Can't see why this would ever happen
+//                    e1.printStackTrace();
+//                }
+//                c = true;
+//            } else {
+//                Log.d(TAG, "Setting compulsory flag to false");
+//            }
+//            compulsory(c);
+//        }
+//        return c;
+        return (question().charAt(0) == COMPULSORY_FLAG);
     }
 
     /**
@@ -178,7 +187,7 @@ public abstract class ESM_Question extends Fragment {
             // Can't see why this should ever happen
             e.printStackTrace();
         }
-        compulsory();
+//        compulsory();
         return this;
     }
 
@@ -205,11 +214,20 @@ public abstract class ESM_Question extends Fragment {
      * @return Updated question object, must be cast back to it's true type
      */
     public ESM_Question compulsory(boolean isCompulsory) {
-        try {
-            mJSON.put(KEY_COMPULSORY, isCompulsory);
-        } catch (JSONException e) {
-            // Can't see why this should ever happen
-            e.printStackTrace();
+//        try {
+//            mJSON.put(KEY_COMPULSORY, isCompulsory);
+//        } catch (JSONException e) {
+//            // Can't see why this should ever happen
+//            e.printStackTrace();
+//        }
+        if (isCompulsory) {
+            if (!compulsory()) {
+                question( String.valueOf(COMPULSORY_FLAG) + question() );
+            }
+        } else {
+            if (compulsory()) {
+                question( question().substring(1) );
+            }
         }
         return this;
     }
@@ -311,10 +329,24 @@ public abstract class ESM_Question extends Fragment {
         return question;
     }
 
+    public static void setCompulsory(Resources resources, TextView textview, String text) {
+        if (text.charAt(0) == COMPULSORY_FLAG) {
+            textview.setText(text, TextView.BufferType.SPANNABLE);
+            Spannable spannable = (Spannable) textview.getText();
+            spannable.setSpan(
+                    new ForegroundColorSpan( ResourcesCompat.getColor(resources, R.color.compulsory, null) ),
+                    0,
+                    1,
+                    Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+            );
+        } else {
+            textview.setText(text);
+        }
+    }
+
     @Override
     public String toString() {
         return mJSON.toString();
     }
 
-    // TODO Compulsory questions: * in question
 }

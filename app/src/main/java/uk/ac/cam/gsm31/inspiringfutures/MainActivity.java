@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements DialogInterface.O
         ESM_Questionnaire TEST_QUESTIONNAIRE = null;
         try {
             ESM_Info INFO_QUESTION = (ESM_Info) new ESM_Info()
-                    .question("Test info title that is really really really long so let's see what happens with overflow and things like that, yay!")
+                    .question("Test info title")
                     .instructions("<p>You can put HTML text here</p>\n" +
                             "<h1>Heading 1</h1>\n" +
                             "<h1>Heading 2</h1>\n" +

@@ -43,7 +43,7 @@ public class ESM_Radios extends ESM_MultipleChoice {
         super.onViewCreated(view, savedInstanceState);
 
         mQuestion = view.findViewById(R.id.esm_question);
-        mQuestion.setText(question());
+        setCompulsory(getResources(), mQuestion, question());
 
         mInstructions = view.findViewById(R.id.esm_instructions);
         mInstructions.setText(instructions());
@@ -58,7 +58,7 @@ public class ESM_Radios extends ESM_MultipleChoice {
             if ( options()[i].equalsIgnoreCase( getString(R.string.other) ) || options()[i].equalsIgnoreCase( String.valueOf(ESM_Question.COMPULSORY_FLAG) + getString(R.string.other) ) ) {
                 if (options()[i].equalsIgnoreCase( String.valueOf(ESM_Question.COMPULSORY_FLAG) + getString(R.string.other) )) {
                     option.setOnClickListener( super.mCompulsoryOtherListener );
-                    option.setText( getString(R.string.other) );
+                    setCompulsory(getResources(), option, options()[i]);
                 } else {
                     option.setOnClickListener( super.mOtherListener );
                 }

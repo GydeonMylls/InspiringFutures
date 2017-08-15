@@ -122,29 +122,16 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
         }
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.d(TAG, "Creating questionnaire");
-        super.onCreate(savedInstanceState);
-
-        // Retain across configuration changes
-        setRetainInstance(true);
-    }
-
-    @Override
-    public void onDestroy() {
-        Log.d(TAG, "Destroying questionnaire");
-        super.onDestroy();
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
         return inflater.inflate(R.layout.esm_questionnaire, container, false);
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "View created");
         mNextButton = view.findViewById(R.id.next_button);
         mNextButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -213,7 +200,7 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
     private void loadQuestion(int index) {
         mCurrentQuestion = mQuestions.get(index);
         setupNextButton();
-        setupPreviousButton();
+        setupBackButton();
         setupQuestionCount();
         mFragmentManager.beginTransaction()
                 .replace(R.id.question_container, mCurrentQuestion, ESM_Question.TAG)
@@ -237,7 +224,7 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
     /**
      * Set mBackButton's visibility depending on question number
      */
-    private void setupPreviousButton() {
+    private void setupBackButton() {
         if (null != mBackButton) {
             if (0 == mCurrentQuestionIndex) {
                 // First question
@@ -295,17 +282,6 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
     }
 
 //    private void putResponses(ContentValues values) {
-//        for (int i=0; i<mQuestions.size(); i++) {
-//            Object response = mQuestions.get(i).getResponse();
-//            if (null != response) {
-//                JSONContentValues.putContentValues(values, LocalDatabaseSchema.DiaryTable.COLUMN_NAME+i, response );
-//            } else {
-//                Log.d(TAG, "getContentValues failed, one or more questions are not fully initialised and returned null to getResponse()");
-//                return;
-//            }
-//        }
-//        return;
-//    }
 
     private String getResponsesAsString() {
         JSONContentValues values = new JSONContentValues();
@@ -320,6 +296,60 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
         }
         return values.toString();
     }
+
+    //    }
+//        return;
+//        }
+//            }
+//                return;
+//                Log.d(TAG, "getContentValues failed, one or more questions are not fully initialised and returned null to getResponse()");
+//            } else {
+//                JSONContentValues.putContentValues(values, LocalDatabaseSchema.DiaryTable.COLUMN_NAME+i, response );
+//            if (null != response) {
+//            Object response = mQuestions.get(i).getResponse();
+//        for (int i=0; i<mQuestions.size(); i++) {
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "Creating questionnaire");
+        super.onCreate(savedInstanceState);
+
+        // Retain across configuration changes
+        setRetainInstance(true);
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d(TAG, "Destroying questionnaire");
+        super.onDestroy();
+    }
+
+    @Override
+    public void onDestroyView() {
+        Log.d(TAG, "View destroyd");
+        super.onDestroyView();
+    }
+
+    //    @Override
+//    public void onAttach(Context context) {
+//        Log.d(TAG, "Attaching");
+//        super.onAttach(context);
+//        if (null != mNextButton) {
+//            setupNextButton();
+//        }
+//        if (null != mBackButton) {
+//            setupBackButton();
+//        }
+//        if (null != mQuestionCount) {
+//            setupQuestionCount();
+//        }
+//    }
+//
+//    @Override
+//    public void onDetach() {
+//        Log.d(TAG, "Detaching");
+//        super.onDetach();
+//    }
 
     // TODO URGENT Loses references to buttons on rotation, button text vanishes
 }

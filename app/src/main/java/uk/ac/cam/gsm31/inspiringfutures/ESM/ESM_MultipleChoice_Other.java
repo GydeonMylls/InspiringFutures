@@ -86,7 +86,16 @@ public class ESM_MultipleChoice_Other extends DialogFragment {
                     .setPositiveButton(R.string.dialog_submit,
                             null
                     )
-                    .setNegativeButton(R.string.dialog_cancel, null) // TODO Cancelable?
+                    .setNegativeButton(R.string.dialog_cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    if (mCompulsory) {
+                                        mButton.toggle();
+                                    }
+                                }
+                            }
+                    )
                     .create();
 
             dialog.setOnShowListener(new DialogInterface.OnShowListener() {
@@ -106,7 +115,9 @@ public class ESM_MultipleChoice_Other extends DialogFragment {
                                             dialog.dismiss();
                                         }
                                     } else {
-                                        mButton.setText(getString(R.string.other) + DIVIDER + response);
+                                        if (!response.isEmpty()) {
+                                            mButton.setText(getString(R.string.other) + DIVIDER + response);
+                                        }
                                         dialog.dismiss();
                                     }
                                 }

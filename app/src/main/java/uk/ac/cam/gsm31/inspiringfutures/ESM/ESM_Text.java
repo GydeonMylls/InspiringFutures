@@ -43,11 +43,11 @@ public class ESM_Text extends ESM_Question {
         super.onViewCreated(view, savedInstanceState);
 
         mQuestion = view.findViewById(R.id.esm_question);
-        mQuestion.setText(question());
+        setCompulsory(getResources(), mQuestion, question());
 
         mResponse = view.findViewById(R.id.esm_response);
         mResponse.setHint(instructions());
-        mResponse.requestFocus();
+
     }
 
     @Override
@@ -72,6 +72,6 @@ public class ESM_Text extends ESM_Question {
         return LAYOUT_ID;
     }
 
-    // TODO Have keyboard close upon leaving question
+    // TODO Automatically show and hide keyboard
 
 }

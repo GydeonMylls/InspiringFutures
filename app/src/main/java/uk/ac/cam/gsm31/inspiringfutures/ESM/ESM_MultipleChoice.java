@@ -58,7 +58,7 @@ public abstract class ESM_MultipleChoice extends ESM_Question {
         @Override
         public void onClick(View view) {
             if ( !( (CompoundButton) view).isChecked() ) {
-                ( (CompoundButton) view).setText( getString(R.string.other) );
+                setCompulsory( getResources(), ((CompoundButton) view), String.valueOf(ESM_Question.COMPULSORY_FLAG)+getString(R.string.other) );
             } else {
                 new ESM_MultipleChoice_Other().setButton((CompoundButton) view).setCompulsory(true).show(getChildFragmentManager(), TAG);
             }
@@ -165,7 +165,11 @@ public abstract class ESM_MultipleChoice extends ESM_Question {
     protected void restoreButtonsText() {
         if ( (null != mButtons) && (null != mButtonsText) ) {
             for (int i=0; i<mButtons.length; i++) {
-                mButtons[i].setText( mButtonsText[i] );
+                if ( mButtonsText[i].equalsIgnoreCase( String.valueOf(COMPULSORY_FLAG)+getString(R.string.other) ) ) {
+                    setCompulsory(getResources(),mButtons[i], mButtonsText[i]);
+                } else {
+                    mButtons[i].setText( mButtonsText[i] );
+                }
             }
         }
     }

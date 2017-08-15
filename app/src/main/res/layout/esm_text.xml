@@ -44,7 +44,7 @@
             android:layout_weight="1"
             android:gravity="top|start">
 
-            <!--<requestFocus />-->
+            <requestFocus />
         </EditText>
 
     </LinearLayout>
