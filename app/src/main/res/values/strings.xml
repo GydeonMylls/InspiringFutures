@@ -15,23 +15,31 @@
   -->
 
 <resources>
-    <string name="app_name">InspiringFutures</string>
+    <string name="app_name">Inspiring Futures</string>
 
     <string name="programme_picker_instructions">Please select the programme you are participating in</string>
     <string name="programmes">[\"Geese Theatre\",\"Clean Break\",\"Good Vibrations\",\"Only Connect\",\"MIP\",\"Open Clasp\",\"Koestler Trust\"]</string>
-    <string name="programme_picker_cancel">You must select a programme to use this app</string>
+    <string name="programme_picker_cancel_message">You must select a programme to use this app</string>
 
     <string name="back_button">Back</string>
     <string name="next_button">Next</string>
     <string name="submit_button">Submit</string>
     <string name="submission_toast">Thank you for your feedback</string>
-    <string name="other">Other</string>
-    <string name="esm_checkboxes_limit_message">Please select no more than %1$d options</string>
-    <string name="esm_checkboxes_default_instructions">Select one or more</string>
-    <string name="esm_radios_default_instructions">Select one</string>
-    <string name="esm_text_default_instructions">Enter text…</string>
-    <string name="dialog_submit">OK</string>
-    <string name="other_prompt">Please specify…</string>
-    <string name="dialog_cancel">Cancel</string>
+
     <string name="esm_compulsory">This question is required</string>
+    <string name="esm_text_default_instructions">Enter text…</string>
+    <string name="other">Other</string>
+    <string name="other_prompt">Please specify…</string>
+    <string name="esm_radios_default_instructions">Select one</string>
+    <string name="esm_checkboxes_default_instructions">Select one or more</string>
+    <string name="esm_checkboxes_limit_message">Please select no more than %1$d options</string>
+
+    <string name="server_address">http://gsm31.user.srcf.net/inspiringfutures</string>
+    <string name="programmes_filename">programmes</string>
+    <string name="programme_picker_loading">Fetching courses</string>
+    <string name="programme_picker_ioexception">An error occured while fetching courses</string>
+    <string name="fetching_questionnaire">Fetching questionnaire</string>
+    <string name="programme_picker_password_prompt">Enter course password...</string>
+    <string name="programme_picker_wrong_password">Incorrect password</string>
+    <string name="esm_responses_too_large">Your responses are too large, if you are submitting audio, video or images please select smaller files</string>
 </resources>

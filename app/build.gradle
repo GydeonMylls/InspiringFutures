@@ -20,7 +20,7 @@ android {
     compileSdkVersion 26
     buildToolsVersion "26.0.0"
     defaultConfig {
-        applicationId "uk.ac.cam.gsm31.inspiringfutures"
+        applicationId "uk.ac.cam.crim.inspiringfutures"
         minSdkVersion 15
         targetSdkVersion 26
         versionCode 1
