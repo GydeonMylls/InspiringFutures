@@ -15,7 +15,15 @@
   ~ limitations under the License.
   -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schema.android.com/apk/res-auto">
+    <item
+        android:id="@+id/menu_item_settings"
+        android:icon="@android:drawable/ic_menu_preferences"
+        app:showAsAction="always" />
+</menu>
+
+ <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
              android:id="@+id/questionnaire_container"
              android:layout_height="match_parent"
              android:layout_width="match_parent"/>

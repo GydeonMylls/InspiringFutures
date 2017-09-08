@@ -34,12 +34,13 @@
     <string name="esm_checkboxes_default_instructions">Select one or more</string>
     <string name="esm_checkboxes_limit_message">Please select no more than %1$d options</string>
 
-    <string name="server_address">http://gsm31.user.srcf.net/inspiringfutures</string>
+    <string name="server_address">https://gsm31.user.srcf.net/inspiringfutures</string>
+    <string name="server_daily_subdirectory">daily</string>
     <string name="programmes_filename">programmes</string>
     <string name="programme_picker_loading">Fetching courses</string>
-    <string name="programme_picker_ioexception">An error occured while fetching courses</string>
+    <string name="programme_picker_ioexception">An error occurred while fetching courses</string>
     <string name="fetching_questionnaire">Fetching questionnaire</string>
-    <string name="programme_picker_password_prompt">Enter course password...</string>
+    <string name="programme_picker_password_prompt">Enter course password…</string>
     <string name="programme_picker_wrong_password">Incorrect password</string>
     <string name="esm_responses_too_large">Your responses are too large, if you are submitting audio, video or images please select smaller files</string>
 </resources>

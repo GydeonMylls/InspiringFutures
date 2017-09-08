@@ -36,4 +36,16 @@
         android:pathData="m200.5,125.5 l0,-50 50,0 0,50z"
         android:strokeAlpha="1" android:strokeColor="#00000000"
         android:strokeLineCap="butt" android:strokeLineJoin="miter" android:strokeWidth="1"/>
+    <path android:fillAlpha="1" android:fillColor="#018aeb"
+        android:pathData="m250.5,75.5 l-5,0 0,45 -45,0 0,5 50,0z"
+        android:strokeAlpha="1" android:strokeColor="#00000000"
+        android:strokeLineCap="butt" android:strokeLineJoin="miter" android:strokeWidth="1"/>
+    <path android:fillAlpha="1" android:fillColor="#018aeb"
+        android:pathData="m300.5,175.5 l-5,0 0,45 -50,0 0,55 5,0 0,-50 50,0z"
+        android:strokeAlpha="1" android:strokeColor="#00000000"
+        android:strokeLineCap="butt" android:strokeLineJoin="miter" android:strokeWidth="1"/>
+    <path android:fillAlpha="1" android:fillColor="#018aeb"
+        android:pathData="m245.5,370.5 l-45,0 0,5 50,0 0,-50 50,0 0,-50 -5,0 0,45 -50,0z"
+        android:strokeAlpha="1" android:strokeColor="#00000000"
+        android:strokeLineCap="butt" android:strokeLineJoin="miter" android:strokeWidth="1"/>
 </vector>

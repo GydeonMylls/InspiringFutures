@@ -286,13 +286,14 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
                         SQLiteDatabase db = null;
                         try {
                             db = localDatabaseHelpers[0].getWritableDatabase();
-                            RemoteConnection remoteConnection = new RemoteConnection( "https://posttestserver.com/post.php?dir=gsm31_3" );      // TODO IMPORTANT USE REAL SERVER
-//                            RemoteConnection remoteConnection = new RemoteConnection( "http://httpbin.org/post" );
-//                            RemoteConnection remoteConnection = new RemoteConnection(getString(R.string.server_address));
+                            // TODO Check for WiFi
+                            // TODO Run on timer, daily/weekly?
+//                            RemoteConnection remoteConnection = new RemoteConnection( "https://posttestserver.com/post.php?dir=gsm31" );      // TODO IMPORTANT USE REAL SERVER
+                            RemoteConnection remoteConnection = new RemoteConnection(getString(R.string.server_address));
                             ResponsesCursorWrapper toSend = new ResponsesCursorWrapper( LocalDatabaseHelper.getUntransmitted(db) );
                             remoteConnection.transmitResponses( toSend, localDatabaseHelpers[0] );
-//                            LocalDatabaseHelper.markAllAsTransmitted(db);
                         } catch (IOException | ArrayIndexOutOfBoundsException e) {
+                            // TODO
                             e.printStackTrace();
                         } finally {
                             if ( (null != db) && (db.isOpen()) ) {
