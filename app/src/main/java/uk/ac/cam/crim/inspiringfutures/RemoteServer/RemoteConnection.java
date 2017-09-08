@@ -123,7 +123,7 @@ public class RemoteConnection {
             outStream.flush();
 
             // Read response
-            int responseCode = connection.getResponseCode();        // TODO only mark as transmitted if successful
+            int responseCode = connection.getResponseCode();
             String response = connection.getResponseMessage();
             Log.d(TAG, "Transmitted response, got code '" + responseCode + "' and message '" + response + "'");
             return (HttpURLConnection.HTTP_OK == responseCode);
@@ -163,8 +163,6 @@ public class RemoteConnection {
             }
             toSend.moveToNext();
         }
-        return;
-
     }
 
 }
