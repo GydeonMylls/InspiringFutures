@@ -16,17 +16,21 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="uk.ac.cam.gsm31.inspiringfutures">
+          package="uk.ac.cam.crim.inspiringfutures">
+
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_inspiringfutures_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/ic_inspiringfutures_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity"
-                  android:windowSoftInputMode="adjustResize">
+                  android:windowSoftInputMode="adjustResize"
+                  android:screenOrientation="portrait">
+                  <!--TODO Support screen rotation-->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

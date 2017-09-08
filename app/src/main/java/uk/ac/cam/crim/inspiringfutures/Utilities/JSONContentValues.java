@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package uk.ac.cam.gsm31.inspiringfutures.util;
+package uk.ac.cam.crim.inspiringfutures.Utilities;
 
 import android.content.ContentValues;
 import android.support.annotation.NonNull;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Arrays;
 
 /**
  * Represents a ContentValues in a JSONArray, allowing conversion to and from strings
@@ -37,13 +34,18 @@ import java.util.Arrays;
 
 public class JSONContentValues extends JSONArray {
 
-    public static final String INVALID_CONTENT_VALUES_TYPE = "Value provided is not valid for ContenValues";
+    public static final String INVALID_CONTENT_VALUES_TYPE = "Value provided is not valid for ContentValues";
 
     public JSONContentValues() {
         super();
     }
     public JSONContentValues(String json) throws JSONException {
         super(json);
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
     }
 
     public void put(@NonNull String key, @NonNull byte[] value) {
@@ -232,166 +234,6 @@ public class JSONContentValues extends JSONArray {
             }
         }
         return cv;
-    }
-
-    /**
-     * Contains methods to represent a ContentValues-compatible key-value pair in a JSON object
-     */
-    public static class JSONKeyValuePair extends JSONObject {
-
-        public static final String KEY = "KEY";
-        public static final String VALUE_TYPE = "VALUE_TYPE";
-        public static final String VALUE = "VALUE";
-
-        // byte[], Boolean, Byte, Double, Float, Integer, Long, Short, String
-        public JSONKeyValuePair(@NonNull String key,@NonNull byte[] value) {
-            super();
-            try {
-                this.put(KEY, key)
-                        .put(VALUE_TYPE, value.getClass().getName())
-                        .put(VALUE, Arrays.toString(value));
-            } catch (JSONException e) {
-                // Should never happen
-                e.printStackTrace();
-            }
-        }
-        public JSONKeyValuePair(@NonNull String key,@NonNull Boolean value) {
-            super();
-            try {
-                this.put(KEY, key)
-                        .put(VALUE_TYPE, value.getClass().getName())
-                        .put(VALUE, value.toString());
-            } catch (JSONException e) {
-                // Should never happen
-                e.printStackTrace();
-            }
-        }
-        public JSONKeyValuePair(@NonNull String key,@NonNull Byte value) {
-            super();
-            try {
-                this.put(KEY, key)
-                        .put(VALUE_TYPE, value.getClass().getName())
-                        .put(VALUE, value.toString());
-            } catch (JSONException e) {
-                // Should never happen
-                e.printStackTrace();
-            }
-        }
-        public JSONKeyValuePair(@NonNull String key,@NonNull Double value) {
-            super();
-            try {
-                this.put(KEY, key)
-                        .put(VALUE_TYPE, value.getClass().getName())
-                        .put(VALUE, value.toString());
-            } catch (JSONException e) {
-                // Should never happen
-                e.printStackTrace();
-            }
-        }
-        public JSONKeyValuePair(@NonNull String key,@NonNull Float value) {
-            super();
-            try {
-                this.put(KEY, key)
-                        .put(VALUE_TYPE, value.getClass().getName())
-                        .put(VALUE, value.toString());
-            } catch (JSONException e) {
-                // Should never happen
-                e.printStackTrace();
-            }
-        }
-        public JSONKeyValuePair(@NonNull String key,@NonNull Integer value) {
-            super();
-            try {
-                this.put(KEY, key)
-                        .put(VALUE_TYPE, value.getClass().getName())
-                        .put(VALUE, value.toString());
-            } catch (JSONException e) {
-                // Should never happen
-                e.printStackTrace();
-            }
-        }
-        public JSONKeyValuePair(@NonNull String key,@NonNull Long value) {
-            super();
-            try {
-                this.put(KEY, key)
-                        .put(VALUE_TYPE, value.getClass().getName())
-                        .put(VALUE, value.toString());
-            } catch (JSONException e) {
-                // Should never happen
-                e.printStackTrace();
-            }
-        }
-        public JSONKeyValuePair(@NonNull String key,@NonNull Short value) {
-            super();
-            try {
-                this.put(KEY, key)
-                        .put(VALUE_TYPE, value.getClass().getName())
-                        .put(VALUE, value.toString());
-            } catch (JSONException e) {
-                // Should never happen
-                e.printStackTrace();
-            }
-        }
-        public JSONKeyValuePair(@NonNull String key,@NonNull String value) {
-            super();
-            try {
-                this.put(KEY, key)
-                        .put(VALUE_TYPE, value.getClass().getName())
-                        .put(VALUE, value);
-            } catch (JSONException e) {
-                // Should never happen
-                e.printStackTrace();
-            }
-        }
-
-
-        public String getKey() throws JSONException {
-            return this.getString(KEY);
-        }
-
-        public String getValueType() throws JSONException {
-            return this.getString(VALUE_TYPE);
-        }
-
-        public String getValueString() throws JSONException {
-            return this.getString(VALUE);
-        }
-
-        public Object getValue() throws JSONException {
-            String type = this.getValueType();
-            String value = this.getValueString();
-            //    byte[], Boolean, Byte, Double, Float, Integer, Long, Short, String
-            if (byte[].class.getName() == type) {
-                value = value.substring(1,value.length()-1);            // Drop square brackets
-                String[] stringArray = value.split(", ");               // Separate items
-                byte[] byteArray = new byte[ stringArray.length ];      // New byte[] of equal length
-                for (int i=0; i<stringArray.length; i++) {
-                    byteArray[i] = Byte.parseByte( stringArray[i] );    // Parse strings as bytes
-                }
-                return byteArray;
-            } else if (Boolean.class.getName() == type) {
-                return Boolean.parseBoolean(value);
-            } else if (Byte.class.getName() == type) {
-                return Byte.parseByte(value);
-            } else if (Double.class.getName() == type) {
-                return Double.parseDouble(value);
-            } else if (Float.class.getName() == type) {
-                return Float.parseFloat(value);
-            } else if (Integer.class.getName() == type) {
-                return Integer.parseInt(value);
-            } else if (Long.class.getName() == type) {
-                return Long.parseLong(value);
-            } else if (Short.class.getName() == type) {
-                return Short.parseShort(value);
-            } else if (String.class.getName() == type) {
-                return value;
-            } else {
-                throw new JSONException("Unsupported type");
-            }
-        }
-
-
-
     }
 
     public static void putJSONContentValues(@NonNull JSONContentValues values,@NonNull String key,@NonNull Object value) {

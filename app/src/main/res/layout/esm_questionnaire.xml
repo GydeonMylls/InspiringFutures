@@ -44,6 +44,13 @@
             android:layout_gravity="end"
             tools:text="Next"/>
 
+        <TextView
+            android:id="@+id/question_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:layout_gravity="center_horizontal"/>
+
         <Button
             android:id="@+id/previous_button"
             android:layout_width="wrap_content"

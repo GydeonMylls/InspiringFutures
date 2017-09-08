@@ -19,21 +19,25 @@
               android:orientation="vertical"
               android:gravity="top"
               android:layout_width="match_parent"
-              android:layout_height="match_parent">
+              android:layout_height="match_parent"
+              android:padding="10dp" >
 
     <TextView
         android:text="@string/programme_picker_instructions"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
 
-        android:padding="16dp"
         android:textStyle="normal|bold"
         android:textSize="18sp" />
+    
+    <Space
+        android:layout_width="wrap_content"
+        android:layout_height="6dp"/>
 
     <ScrollView
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp" >
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <RadioGroup
             android:id="@+id/programme_picker_radios"
@@ -41,5 +45,13 @@
             android:layout_height="wrap_content" >
         </RadioGroup>
     </ScrollView>
+
+    <EditText
+        android:id="@+id/programme_picker_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/programme_picker_password_prompt"
+        android:inputType="text"/>
+        <!--TODO Hide password?-->
 
 </LinearLayout>

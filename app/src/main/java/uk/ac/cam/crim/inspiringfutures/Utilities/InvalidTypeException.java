@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.ac.cam.gsm31.inspiringfutures.util;
+package uk.ac.cam.crim.inspiringfutures.Utilities;
 
 /**
  * Indicates an invaid type was passed to putContentValues to be inserted into a ContentValues object
