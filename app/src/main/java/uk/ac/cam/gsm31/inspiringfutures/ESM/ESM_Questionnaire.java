@@ -38,14 +38,16 @@ import java.util.UUID;
 import uk.ac.cam.gsm31.inspiringfutures.R;
 
 /**
+ * Represents and manages an ordered collection of ESM_QUESTION objects
+ *
  * <p> Created by Gideon Mills on 11/07/2017 for InspiringFutures. </p>
  */
 
 public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ESMQuestionListener {
 
     public static final String TAG = "ESM_Questionnaire";
-    private static final String KEY_QUESTIONNAIRE_ID = "questionnaire_id";
-    private static final String KEY_QUESTIONS_ARRAY = "questions_array";
+    public static final String KEY_QUESTIONNAIRE_ID = "questionnaire_id";
+    public static final String KEY_QUESTIONS_ARRAY = "questions_array";
 
     private String mID;
     private JSONArray mJSONQuestions;
@@ -228,7 +230,7 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
      * Commits user responses
      */
     private void submitResponses() {
-        Log.d(TAG, "Submitting responses to" + mCurrentQuestionIndex + " questions");
+        Log.d(TAG, "Submitting responses to " + mCurrentQuestionIndex + " questions");
         Toast.makeText(getActivity(), R.string.submission_toast, Toast.LENGTH_LONG).show();
         // TODO
         getActivity().finish();

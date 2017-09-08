@@ -15,8 +15,17 @@
   ~ limitations under the License.
   -->
 
+
 <resources>
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
+    <!--<color name="colorPrimary">#79BD8E</color>-->
+    <!--<color name="colorPrimaryDark">#2C7A62</color>-->
+    <!--<color name="colorAccent">#D73744</color>-->
+
+    <!--<color name="colorPrimary">#06A554</color>-->
+    <!--<color name="colorPrimaryDark">#00763A</color>-->
+    <!--<color name="colorAccent">#D73744</color>-->
 </resources>

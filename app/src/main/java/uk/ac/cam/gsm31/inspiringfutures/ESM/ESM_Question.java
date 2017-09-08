@@ -43,6 +43,13 @@ public abstract class ESM_Question extends Fragment {
 
     private JSONObject mJSON;
 
+    public ESM_Question() {
+        super();
+
+        mJSON = new JSONObject();
+        type();
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         Log.d(TAG, "Creating "+type());
@@ -106,11 +113,11 @@ public abstract class ESM_Question extends Fragment {
      * @return Question instructions as a String
      */
     public String instructions() {
-        String i = "";
+        String i = getDefaultInstructions();
         try {
             i = (String) mJSON.get(KEY_INSTRUCTIONS);
         } catch (JSONException e) {
-            Log.e(TAG, "JSON does not contain instructions, adding blank string");
+            Log.e(TAG, "JSON does not contain instructions, adding default instructions");
             try {
                 mJSON.put(KEY_INSTRUCTIONS, i);
             } catch (JSONException e1) {
@@ -125,7 +132,7 @@ public abstract class ESM_Question extends Fragment {
      * Setter for question text, for testing purposes only.
      *
      * @param question    Text of question
-     * @return Updated question object, allows chaining
+     * @return Updated question object, must be cast back to it's true type
      */
     public ESM_Question question(String question) {
         try {
@@ -140,7 +147,7 @@ public abstract class ESM_Question extends Fragment {
      * Setter for question instructions, for testing purposes only.
      *
      * @param instructions    Text of instructions
-     * @return Updated question object, allows chaining
+     * @return Updated question object, must be cast back to it's true type
      */
     public ESM_Question instructions(String instructions) {
         try {
@@ -171,6 +178,8 @@ public abstract class ESM_Question extends Fragment {
         return mJSON;
     }
 
+    public abstract String getDefaultInstructions();
+
     public abstract String getResponse();       // TODO Extend to images, video, audio
 
     /**
@@ -185,7 +194,7 @@ public abstract class ESM_Question extends Fragment {
         Log.d(TAG, "getESMQuestion: Detected question type " + type);
         ESM_Question question = null;
         try {
-            question = (ESM_Question) Class.forName(type).getConstructors()[0].newInstance();       // Class must have a single accessible constructor that takes no arguments
+            question = (ESM_Question) Class.forName(type).getConstructors()[0].newInstance();       // Class must have a single accessible constructor that takes no arguments, which should be the case for subclasses of Fragment
             question.fromJSON(json);
         } catch (java.lang.InstantiationException e) {
             Log.e(TAG, "getESMQuestion: Question type refers to an abstract class");
@@ -198,11 +207,15 @@ public abstract class ESM_Question extends Fragment {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             // This is the only exception that should ever occur, insofar as exceptions should ever occur
-            Log.e(TAG, "getESMQuestion: Unknown KEY_QUESTION type");
+            Log.e(TAG, "getESMQuestion: Unknown question type");
             throw new JSONException("JSON is not a known ESM_Question type");
         }
-        // Only happens if JSON is a known KEY_QUESTION type
+        // Only happens if JSON is a known question type
         return question;
     }
 
+    @Override
+    public String toString() {
+        return mJSON.toString();
+    }
 }
