@@ -26,6 +26,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.android.gms.iid.InstanceID;
@@ -36,8 +38,8 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import uk.ac.cam.crim.inspiringfutures.ESM.ESM_Questionnaire;
-import uk.ac.cam.crim.inspiringfutures.Notification.ReminderService;
 import uk.ac.cam.crim.inspiringfutures.RemoteServer.RemoteConnection;
+import uk.ac.cam.crim.inspiringfutures.Services.BootReceiver;
 import uk.ac.cam.crim.inspiringfutures.Utilities.LoadingDialog;
 
 /**
@@ -76,7 +78,7 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
 
         sPreferences = getPreferences(MODE_PRIVATE);
 
-        ReminderService.startReminder(this);
+        BootReceiver.startServices(this);
 
         if (sPreferences.contains(KEY_DEVICE_ID)) {
             sDeviceId = sPreferences.getString(KEY_DEVICE_ID, null);
@@ -87,7 +89,7 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
             sPreferences.edit().putString(KEY_DEVICE_ID, sDeviceId).apply();
         }
 
-        if (sPreferences.contains(KEY_PROGRAMME_ID) && sPreferences.contains(KEY_DAILY_QUESTIONNAIRE)) {
+        if (false) {//sPreferences.contains(KEY_PROGRAMME_ID) && sPreferences.contains(KEY_DAILY_QUESTIONNAIRE)) {  // TODO Enable
             sProgrammeId = sPreferences.getString(KEY_PROGRAMME_ID, null);
             Log.d(TAG, "Found programme ID: " + sProgrammeId);
             sDailyQuestionnaireString = sPreferences.getString(KEY_DAILY_QUESTIONNAIRE, null);
@@ -107,6 +109,24 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {     // Switch is not really necessary but here for extensibility
+            case R.id.menu_item_settings:
+                //Todo launch preferences activity
+                Toast.makeText(this, "Settings things happen now", Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     private void loadQuestionnaire() {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -121,6 +141,10 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
     public class ProgrammePickerTask extends AsyncTask<Void,String,Void> {
         public static final String TAG = "ProgrammePickerTask";
 
+        /**
+         * Wrapper to enable toasting from AsyncTask
+         * @param values    First argument will be displayed as a toast
+         */
         @Override
         protected void onProgressUpdate(String... values) {
             try {
@@ -201,7 +225,7 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
             loadingDialog.show(getSupportFragmentManager(), LoadingDialog.TAG);
 
             try {
-                RemoteConnection remoteConnection = new RemoteConnection(getString(R.string.server_address) + "/" + getString(R.string.server_daily_subdirectory));
+                RemoteConnection remoteConnection = new RemoteConnection(getString(R.string.server_address) + getString(R.string.server_daily_subdirectory) + "/");
                 sDailyQuestionnaireString = remoteConnection.getFileText( sProgrammeId.replace(' ','_') + ".json");
                 Log.d(TAG, "Setting daily questionnaire string: " + sDailyQuestionnaireString);
                 sPreferences.edit().putString(KEY_DAILY_QUESTIONNAIRE, sDailyQuestionnaireString).apply();
@@ -224,5 +248,7 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
             return null;
         }
     }
+
+
 
 }

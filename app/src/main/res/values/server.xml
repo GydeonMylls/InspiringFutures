@@ -15,7 +15,9 @@
   ~ limitations under the License.
   -->
 
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:id="@+id/questionnaire_container"
-             android:layout_height="match_parent"
-             android:layout_width="match_parent"/>
+<resources>
+    <!--<string name="server_address">http://gsm31.ddns.net/if/</string>-->
+    <string name="server_address">https://pizza.cl.cam.ac.uk/inspiringfutures/</string>
+    <string name="server_daily_subdirectory">daily</string>
+    <string name="programmes_filename">programmes.txt</string>
+</resources>

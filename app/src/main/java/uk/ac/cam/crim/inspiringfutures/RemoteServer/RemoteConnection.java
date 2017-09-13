@@ -16,7 +16,10 @@
 
 package uk.ac.cam.crim.inspiringfutures.RemoteServer;
 
+import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -31,12 +34,11 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownServiceException;
 
-import javax.net.ssl.HttpsURLConnection;
-
 import uk.ac.cam.crim.inspiringfutures.LocalDatabase.LocalDatabaseHelper;
 import uk.ac.cam.crim.inspiringfutures.LocalDatabase.LocalDatabaseSchema;
 import uk.ac.cam.crim.inspiringfutures.LocalDatabase.ResponsesCursorWrapper;
 import uk.ac.cam.crim.inspiringfutures.MainActivity;
+import uk.ac.cam.crim.inspiringfutures.R;
 
 /**
  * Manages connections to remote server
@@ -68,7 +70,7 @@ public class RemoteConnection {
     public String getFileText(String filename) throws IOException {
 
         String filePath = mServerURL.toString()
-                + "/"
+//                + "/"
                 + filename;
         URL fileURL = new URL(
                 filePath
@@ -111,7 +113,8 @@ public class RemoteConnection {
     private boolean sendPost(String postParams) {
         OutputStream outStream = null;
         try {
-            HttpsURLConnection connection = (HttpsURLConnection) mServerURL.openConnection();
+//            HttpsURLConnection connection = (HttpsURLConnection) mServerURL.openConnection(); // TODO USE HTTPS!!!
+            HttpURLConnection connection = (HttpURLConnection) mServerURL.openConnection();
             connection.setRequestMethod("POST");
             connection.setRequestProperty("User-Agent", USER_AGENT + MainActivity.getDeviceId());
             connection.setDoOutput(true);
@@ -145,24 +148,60 @@ public class RemoteConnection {
     }
 
     /**
-     * Sends reponses to remote server via HTTP POST requests, marking each response as transmitted on success. The remote connection must be using HTTPS.
+     * Sends reponses to remote server via HTTP POST requests, marking each response as transmitted on success. The remote connection must be using SSL. This can involve transferring a significant amount of data so try to only call it when using WiFi
      * @param cursor                Responses to be transmitted
      * @param localDatabaseHelper   Used to update tranmitted field
      */
     public void transmitResponses(Cursor cursor, LocalDatabaseHelper localDatabaseHelper) throws IOException {
         ResponsesCursorWrapper toSend = new ResponsesCursorWrapper( cursor );
         toSend.moveToFirst();
+
+        int transmitted = 0;
+        int successes = 0;
+        int failures = 0;
         while (!toSend.isAfterLast()) {
             String postParams = LocalDatabaseSchema.ResponsesTable.Columns.DEVICE_ID + "=" + toSend.getDeviceId() + "&"
                     + LocalDatabaseSchema.ResponsesTable.Columns.QUESTIONNAIRE_ID + "=" + toSend.getQuestionnaireId() + "&"
                     + LocalDatabaseSchema.ResponsesTable.Columns.TIMESTAMP + "=" + toSend.getTimestamp() + "&"
                     + LocalDatabaseSchema.ResponsesTable.Columns.RESPONSES + "=" + toSend.getResponsesString();
+            // ToDo creating a new connection every time is quite slow, change this if time allows
             boolean success = sendPost(postParams);
+            transmitted++;
             if (success) {
                 LocalDatabaseHelper.markAsTransmitted(toSend.getTimestamp(), localDatabaseHelper);
+                successes++;
+            } else {
+                failures++;
             }
             toSend.moveToNext();
         }
+        Log.d(TAG, "Transmitted responses to " + transmitted + " questionnaires: "
+                + successes + " successful and " +failures + " failed");
+    }
+
+    public static void startSync(final Context context) {
+        new AsyncTask<LocalDatabaseHelper,Void,Void>() {
+            @Override
+            protected Void doInBackground(LocalDatabaseHelper... localDatabaseHelpers) {
+                SQLiteDatabase db = null;
+                try {
+                    db = localDatabaseHelpers[0].getWritableDatabase();
+                    RemoteConnection remoteConnection = new RemoteConnection(context.getResources().getString(R.string.server_address));
+                    ResponsesCursorWrapper toSend = new ResponsesCursorWrapper( LocalDatabaseHelper.getUntransmitted(db) );
+                    remoteConnection.transmitResponses( toSend, localDatabaseHelpers[0] );
+                } catch (IOException | ArrayIndexOutOfBoundsException e) {
+                    // TODO
+                    e.printStackTrace();
+                } finally {
+                    if ( (null != db) && (db.isOpen()) ) {
+                        db.close();
+                    }
+                }
+                return null;
+            }
+        }.execute(
+                new LocalDatabaseHelper(context)
+        );
     }
 
 }

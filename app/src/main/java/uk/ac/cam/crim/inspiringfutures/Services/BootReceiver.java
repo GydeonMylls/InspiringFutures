@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.ac.cam.crim.inspiringfutures.Notification;
+package uk.ac.cam.crim.inspiringfutures.Services;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -22,6 +22,7 @@ import android.content.Intent;
 import android.util.Log;
 
 /**
+ * Starts services on boot
  * <p> Created by  Gideon Mills on 07/09/2017 for InspiringFutures-client. </p>
  */
 
@@ -31,11 +32,12 @@ public class BootReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "Booted, launching reminder service");
-        // Wait for debugger, for testing TODO Remove
-//        android.os.Debug.waitForDebugger();
-        // Start reminder service
-        ReminderService.startReminder(context);
-//        context.startService(ReminderService.newIntent(context));
+        Log.d(TAG, "Boot listener launched, starting services");
+        startServices(context);
+    }
+
+    public static void startServices(Context context) {
+        ReminderService.startReminderService(context);
+        SyncService.startSyncService(context);
     }
 }

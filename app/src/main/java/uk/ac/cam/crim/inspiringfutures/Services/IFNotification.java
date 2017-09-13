@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.ac.cam.crim.inspiringfutures.Notification;
+package uk.ac.cam.crim.inspiringfutures.Services;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -29,6 +29,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import uk.ac.cam.crim.inspiringfutures.R;
 
 /**
+ * Helper class to standardise notifications for the app
  * <p> Created by  Gideon Mills on 08/09/2017 for InspiringFutures-client. </p>
  */
 
@@ -43,6 +44,16 @@ public class IFNotification {
         return mNotification;
     }
 
+    /**
+     * Create a notification with a specific id. THe notificatoin will have a standard colour, icon, light and vibrate pattern and will use the default notification sound
+     * @param context
+     * @param resources
+     * @param title
+     * @param message
+     * @param pendingIntent
+     * @param id               0 is reserved for daily reminders
+     */
+    @SuppressWarnings("JavaDoc")
     public IFNotification(Context context, Resources resources, String title, String message, PendingIntent pendingIntent, int id) {
         mContext = context;
         mId = id;
@@ -59,7 +70,8 @@ public class IFNotification {
 ////                        BitmapFactory.decodeResource(resources, R.drawable.ic_inspiringfutures_notification_small)
 //
 //                )
-//                .setSmallIcon(R.drawable.ic_inspiringfutures_notification_small)
+                .setColor(primaryColour)
+                .setSmallIcon(R.drawable.ic_inspiringfutures_notification_small_png)
                 .setTicker(title)
                 .setContentTitle(title)
                 .setContentText(message)
@@ -87,14 +99,10 @@ public class IFNotification {
         //// ic_inspiringfutures_notification_large));//largeIc);
 
         // TODO Redesign icon according to Android design principles
-        int smallIc = R.drawable.ic_inspiringfutures_notification_small_png;//ic_inspiringfutures_notification_small;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            smallIc = R.drawable.ic_inspiringfutures_notification_lollipop;
-            notificationBuilder.setColor(primaryColour);
-        }// else {
-//            smallIc = R.drawable.ic_inspiringfutures_notification_small;
+        // Set notification colour on Lollipop+ devices
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            notificationBuilder.setColor(primaryColour);
 //        }
-        notificationBuilder.setSmallIcon(smallIc);
 
         mNotification = notificationBuilder.build();
     }

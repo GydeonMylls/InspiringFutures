@@ -50,7 +50,7 @@ public class LoadingDialog extends DialogFragment {
 
         try {
             loadingDialog.getWindow().setGravity(Gravity.CENTER);
-            loadingDialog.getWindow().setLayout(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);      // TODO Maybe have MATCH_PARENT for width
+            loadingDialog.getWindow().setLayout(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
         } catch (NullPointerException e) {
             loadingDialog.getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
         }

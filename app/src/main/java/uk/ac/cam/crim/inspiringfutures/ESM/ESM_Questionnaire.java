@@ -18,7 +18,6 @@ package uk.ac.cam.crim.inspiringfutures.ESM;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -36,17 +35,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import uk.ac.cam.crim.inspiringfutures.LocalDatabase.LocalDatabaseHelper;
 import uk.ac.cam.crim.inspiringfutures.LocalDatabase.LocalDatabaseSchema;
-import uk.ac.cam.crim.inspiringfutures.LocalDatabase.ResponsesCursorWrapper;
 import uk.ac.cam.crim.inspiringfutures.MainActivity;
 import uk.ac.cam.crim.inspiringfutures.R;
-import uk.ac.cam.crim.inspiringfutures.RemoteServer.RemoteConnection;
 import uk.ac.cam.crim.inspiringfutures.Utilities.JSONContentValues;
 
 /**
@@ -279,31 +275,31 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
                 db.insert(LocalDatabaseSchema.ResponsesTable.NAME, null, getContentValues());
                 Toast.makeText(getActivity(), R.string.submission_toast, Toast.LENGTH_SHORT).show();
 
-                new AsyncTask<LocalDatabaseHelper,Void,Void>() {     // TODO DELETE this
-
-                    @Override
-                    protected Void doInBackground(LocalDatabaseHelper... localDatabaseHelpers) {
-                        SQLiteDatabase db = null;
-                        try {
-                            db = localDatabaseHelpers[0].getWritableDatabase();
-                            // TODO Check for WiFi
-                            // TODO Run on timer, daily/weekly?
-//                            RemoteConnection remoteConnection = new RemoteConnection( "https://posttestserver.com/post.php?dir=gsm31" );      // TODO IMPORTANT USE REAL SERVER
-                            RemoteConnection remoteConnection = new RemoteConnection(getString(R.string.server_address));
-                            ResponsesCursorWrapper toSend = new ResponsesCursorWrapper( LocalDatabaseHelper.getUntransmitted(db) );
-                            remoteConnection.transmitResponses( toSend, localDatabaseHelpers[0] );
-                        } catch (IOException | ArrayIndexOutOfBoundsException e) {
-                            // TODO
-                            e.printStackTrace();
-                        } finally {
-                            if ( (null != db) && (db.isOpen()) ) {
-                                db.close();
-                            }
-                        }
-
-                        return null;
-                    }
-                }.execute(helper);
+//                new AsyncTask<LocalDatabaseHelper,Void,Void>() {     // TODO DELETE this
+//
+//                    @Override
+//                    protected Void doInBackground(LocalDatabaseHelper... localDatabaseHelpers) {
+//                        SQLiteDatabase db = null;
+//                        try {
+//                            db = localDatabaseHelpers[0].getWritableDatabase();
+//                            // TODO Check for WiFi
+//                            // TODO Run on timer, daily/weekly?
+////                            RemoteConnection remoteConnection = new RemoteConnection( "https://posttestserver.com/post.php?dir=gsm31" );      // TODO IMPORTANT USE REAL SERVER
+//                            RemoteConnection remoteConnection = new RemoteConnection(getString(R.string.server_address));
+//                            ResponsesCursorWrapper toSend = new ResponsesCursorWrapper( LocalDatabaseHelper.getUntransmitted(db) );
+//                            remoteConnection.transmitResponses( toSend, localDatabaseHelpers[0] );
+//                        } catch (IOException | ArrayIndexOutOfBoundsException e) {
+//                            // TODO
+//                            e.printStackTrace();
+//                        } finally {
+//                            if ( (null != db) && (db.isOpen()) ) {
+//                                db.close();
+//                            }
+//                        }
+//
+//                        return null;
+//                    }
+//                }.execute(helper);
             } finally {
                 db.close();
                 getActivity().finish();
