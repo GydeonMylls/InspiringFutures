@@ -147,11 +147,6 @@ public class ESM_CheckBoxes extends ESM_MultipleChoice {
     }
 
     @Override
-    public String getDefaultInstructions() {
-        return getString(R.string.esm_checkboxes_default_instructions);
-    }
-
-    @Override
     public String getResponse() {
         if (null != mButtons) {
             String out = "";

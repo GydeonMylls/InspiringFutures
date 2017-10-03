@@ -34,6 +34,7 @@ import android.widget.TextView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 
 import uk.ac.cam.crim.inspiringfutures.R;
@@ -52,7 +53,6 @@ public abstract class ESM_Question extends Fragment {
     public static final String KEY_ESM_TYPE = "esm_type";
     public static final String KEY_QUESTION = "question";
     public static final String KEY_INSTRUCTIONS = "instructions";
-    public static final String KEY_COMPULSORY = "compulsory";
     public static final char COMPULSORY_FLAG = '*';
 
     protected JSONObject mJSON;
@@ -66,7 +66,8 @@ public abstract class ESM_Question extends Fragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.d(TAG, "Creating "+type());
+        // Class.getCanonicalName() is used rather than type() as onCreate() is called before the question JSON is inserted, so type() constructs the type every time
+        Log.d(TAG, "Creating "+this.getClass().getCanonicalName());
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
@@ -74,7 +75,7 @@ public abstract class ESM_Question extends Fragment {
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "Destroying "+type());
+        Log.d(TAG, "Destroying "+this.getClass().getCanonicalName());
         super.onDestroy();
     }
 
@@ -94,9 +95,9 @@ public abstract class ESM_Question extends Fragment {
         try {
             t = mJSON.getString(KEY_ESM_TYPE);
         } catch (JSONException e) {
-            Log.e(TAG, "JSON does not contain type, adding");
+            Log.d(TAG, "JSON does not contain type, adding");
             try {
-                t = this.getClass().getName();
+                t = this.getClass().getCanonicalName();
                 mJSON.put(KEY_ESM_TYPE, t);
             } catch (JSONException e1) {
                 // Can never happen
@@ -129,11 +130,11 @@ public abstract class ESM_Question extends Fragment {
      * @return Question instructions as a String
      */
     public String instructions() {
-        String i = getDefaultInstructions();
+        String i = "";
         try {
             i = mJSON.getString(KEY_INSTRUCTIONS);
         } catch (JSONException e) {
-            Log.e(TAG, "JSON does not contain instructions, adding default instructions");
+            Log.e(TAG, "JSON does not contain instructions, adding blank string");
             instructions(i);
         }
         return i;
@@ -192,12 +193,6 @@ public abstract class ESM_Question extends Fragment {
      * @return Updated question object, must be cast back to it's true type
      */
     public ESM_Question compulsory(boolean isCompulsory) {
-//        try {
-//            mJSON.put(KEY_COMPULSORY, isCompulsory);
-//        } catch (JSONException e) {
-//            // Can't see why this should ever happen
-//            e.printStackTrace();
-//        }
         if (isCompulsory) {
             if (!compulsory()) {
                 question( String.valueOf(COMPULSORY_FLAG) + question() );
@@ -231,13 +226,6 @@ public abstract class ESM_Question extends Fragment {
     }
 
     /**
-     * Used if no instructions are provided.
-     *
-     * @return Default instructions for this question type.
-     */
-    public abstract String getDefaultInstructions();
-
-    /**
      * Used to inflate view
      * @return ID (as found in R) of layout
      */
@@ -246,23 +234,14 @@ public abstract class ESM_Question extends Fragment {
     /**
      * Returns user response to question
      *
-     * @return Response must be one of byte[], Boolean, Byte, Double, Float, Integer, Long, Short, String
+     * @return Response must be serializable to a String and have a constructor taking a String that reconstructs the object
      */
-    public abstract Object getResponse();
+    public abstract Serializable getResponse();
 
     /**
      * @return Boolean to denote whether question has been answered
      */
     public abstract boolean isAnswered();
-
-//    /**
-//     * Inserts user response to question into a ContentValues object as an appropriate type
-//     *
-//     * @param values    Set into which to insert response
-//     * @param key       Key with which to insert
-//     * @return      Updated set
-//     */
-//    public abstract ContentValues insertResponse(ContentValues values, String key);
 
     /**
      * Creates an ESM question from a JSON, automatically detecting and instantiating the correct question type. Question types are stored as full class names to facilitate this.
@@ -277,36 +256,43 @@ public abstract class ESM_Question extends Fragment {
         Class<?> clss = null;
         ESM_Question question = null;
         try {
-            clss = Class.forName(type);
-        } catch (ClassNotFoundException e) {
             try {
-                // Assume it's a class in the same package as this
-                clss = Class.forName(ESM_Question.class.getPackage().getName() + type );
-            } catch (ClassNotFoundException e1) {
-                // This is the only exception that should ever occur, insofar as exceptions should ever occur
-                Log.e(TAG, "getESMQuestion: Unknown question type");
-                throw new JSONException("JSON is not a known ESM_Question type");
+                clss = Class.forName(type);
+            } catch (ClassNotFoundException e) {
+                try {
+                    // Assume it's a class in the same package as this
+                    clss = Class.forName(ESM_Question.class.getPackage().getName() + type );
+                } catch (ClassNotFoundException e1) {
+                    // This is the only exception that should ever occur, insofar as exceptions should ever occur
+                    Log.e(TAG, "getESMQuestion: Unknown question type");
+                    throw new JSONException("JSON is not a known ESM_Question type");
+                }
             }
+            question = (ESM_Question) clss.getConstructor().newInstance();      // Class must have an accessible constructor that takes no arguments
+            question.fromJSON(json);
+        } catch (java.lang.InstantiationException e) {
+            Log.e(TAG, "getESMQuestion: Question type refers to an abstract class");
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            Log.e(TAG, "getESMQuestion: Question constructor cannot be accessed");
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            Log.e(TAG, "getESMQuestion: Question constructor threw exception");
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            Log.e(TAG, "getESMQuestion: Question constructor does not exist");
+            e.printStackTrace();
         }
-        if (null != clss) {
-            try {
-                question = (ESM_Question) clss.getConstructors()[0].newInstance();      // Class must have a single accessible constructor that takes no arguments
-                question.fromJSON(json);
-            } catch (java.lang.InstantiationException e) {
-                Log.e(TAG, "getESMQuestion: Question type refers to an abstract class");
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                Log.e(TAG, "getESMQuestion: Question constructor cannot be accessed");
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                Log.e(TAG, "getESMQuestion: Question constructor threw exception");
-                e.printStackTrace();
-            }
-        }
-        // Only happens if JSON is a known question type,
+        // Only happens if JSON is a known question type, returns null if other exceptions occur
         return question;
     }
 
+    /**
+     * Static method to set colour of the compulsory flag in question text. Call this to set question text.
+     * @param resources    Android resources containing the compulsory flag colour
+     * @param textview     Question holder
+     * @param text         Text to display in textview
+     */
     public static void setCompulsory(Resources resources, TextView textview, String text) {
         if (text.charAt(0) == COMPULSORY_FLAG) {
             textview.setText(text, TextView.BufferType.SPANNABLE);

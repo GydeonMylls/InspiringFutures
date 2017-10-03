@@ -16,8 +16,9 @@
   -->
 
 <resources>
-    <!--<string name="server_address">http://gsm31.ddns.net/if/</string>-->
+    <!--<string name="server_address">https://posttestserver.com/post.php?dir=gsm31</string>-->
     <string name="server_address">https://pizza.cl.cam.ac.uk/inspiringfutures/</string>
     <string name="server_daily_subdirectory">daily</string>
     <string name="programmes_filename">programmes.txt</string>
+    <string name="file_upload_key">iffile</string>
 </resources>

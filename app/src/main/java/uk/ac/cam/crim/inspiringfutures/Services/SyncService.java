@@ -25,15 +25,16 @@ import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.io.IOException;
 import java.util.Calendar;
 
+import uk.ac.cam.crim.inspiringfutures.LocalDatabase.FileCursorWrapper;
 import uk.ac.cam.crim.inspiringfutures.LocalDatabase.LocalDatabaseHelper;
 import uk.ac.cam.crim.inspiringfutures.LocalDatabase.ResponsesCursorWrapper;
-import uk.ac.cam.crim.inspiringfutures.MainActivity;
 import uk.ac.cam.crim.inspiringfutures.R;
 import uk.ac.cam.crim.inspiringfutures.RemoteServer.RemoteConnection;
 
@@ -70,7 +71,7 @@ public class SyncService extends IntentService {
 //                && (activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI);    // TODO Enable
         if (wifiConnected) {
             Log.d(TAG, "WiFi connected, starting sync");
-            this.getSharedPreferences(MainActivity.class.getName(), MODE_PRIVATE)
+            PreferenceManager.getDefaultSharedPreferences(this)
                     .edit()
                     .putLong(KEY_LAST_SYNC, Calendar.getInstance().getTimeInMillis())
                     .apply();
@@ -79,11 +80,13 @@ public class SyncService extends IntentService {
             SQLiteDatabase db = helper.getWritableDatabase();
             try {
                 RemoteConnection remoteConnection = new RemoteConnection(this.getResources().getString(R.string.server_address));
-                ResponsesCursorWrapper toSend = new ResponsesCursorWrapper( LocalDatabaseHelper.getUntransmitted(db) );
-                remoteConnection.transmitResponses( toSend, helper );
+                ResponsesCursorWrapper responsesToSend = new ResponsesCursorWrapper( LocalDatabaseHelper.getUntransmittedResponses(db) );
+                remoteConnection.transmitResponses( responsesToSend, helper );
+                FileCursorWrapper filesToSend = new FileCursorWrapper( LocalDatabaseHelper.getUntransmittedFiles(db) );
+                remoteConnection.transmitFiles(filesToSend, helper, this);
                 new IFNotification(this, this.getResources(), "Sync completed", "", null, 1).show();
             } catch (IOException | ArrayIndexOutOfBoundsException e) {
-                // TODO
+                // TODO Handle exceptions
                 e.printStackTrace();
             } finally {
                 db.close();
@@ -106,7 +109,7 @@ public class SyncService extends IntentService {
         // Set target time
         // Using java.util.Calendar rather than android.icu.util.Calendar for compatability
         // Get target time from preferences
-        SharedPreferences preferences = context.getSharedPreferences(MainActivity.class.getName(), MODE_PRIVATE);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         long lastSync;
         if (preferences.contains(KEY_LAST_SYNC)) {
             lastSync = preferences.getLong(KEY_LAST_SYNC, 0L);

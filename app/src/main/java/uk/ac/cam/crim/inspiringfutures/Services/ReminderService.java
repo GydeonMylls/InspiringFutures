@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -77,7 +78,7 @@ public class ReminderService extends IntentService {
         PendingIntent notificationIntent = PendingIntent.getService(context, 0, ReminderService.newIntent(context), 0);
 
         // Get target time from preferences
-        SharedPreferences preferences = context.getSharedPreferences(MainActivity.class.getName(), MODE_PRIVATE);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         int reminderHour;
         int reminderMinute;
         long reminderInterval;

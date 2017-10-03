@@ -35,31 +35,49 @@ public class LocalDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         // Create DiaryTable
-        String createString = "create table " + LocalDatabaseSchema.ResponsesTable.NAME + "( "
-//                + "id"                                                          + " INTEGER PRIMARY KEY"                                + ", "
+        String createResponsesTable = "create table " + LocalDatabaseSchema.ResponsesTable.NAME + "( "
                 + LocalDatabaseSchema.ResponsesTable.Columns.DEVICE_ID          + " VARCHAR(20)"                                                                + ", "
-                + LocalDatabaseSchema.ResponsesTable.Columns.QUESTIONNAIRE_ID                                                                                   + ", "
+                + LocalDatabaseSchema.ResponsesTable.Columns.QUESTIONNAIRE_ID                                                                                   + ", "  // Let SQLite choose type
                 + LocalDatabaseSchema.ResponsesTable.Columns.TIMESTAMP          + " INTEGER DEFAULT (cast(strftime('%s','now') as int)) NOT NULL PRIMARY KEY"   + ", "
-                + LocalDatabaseSchema.ResponsesTable.Columns.RESPONSES                                                                                          + ", "
+                + LocalDatabaseSchema.ResponsesTable.Columns.RESPONSES                                                                                          + ", "  // Let SQLite choose type
                 + LocalDatabaseSchema.ResponsesTable.Columns.TRANSMITTED        + " BOOLEAN"
+                + ")"
                 ;
-        createString += ")";
-        sqLiteDatabase.execSQL(createString);
+//        createResponsesTable += ")";
+        sqLiteDatabase.execSQL(createResponsesTable);
 
+        // Create FilesTable
+        String createFilesTable = "create table " + LocalDatabaseSchema.FilesTable.NAME + "( "
+                + LocalDatabaseSchema.FilesTable.Columns.FILEPATH + " NOT NULL PRIMARY KEY" + ", "     // Let SQLite choose type, no need to upload file multiple times if used in multiple questions
+                + LocalDatabaseSchema.FilesTable.Columns.TRANSMITTED    + " BOOLEAN"
+                + ")"
+                ;
+        sqLiteDatabase.execSQL(createFilesTable);
     }
 
-    public static void markAsTransmitted(String timestamp, LocalDatabaseHelper localDatabaseHelper) {
+    public static void markResponseAsTransmitted(String timestamp, LocalDatabaseHelper localDatabaseHelper) {
         ContentValues values = new ContentValues();
         values.put(LocalDatabaseSchema.ResponsesTable.Columns.TRANSMITTED, true);
         localDatabaseHelper.getWritableDatabase().update(
-                LocalDatabaseSchema.ResponsesTable.NAME,
-                values,
-                LocalDatabaseSchema.ResponsesTable.Columns.TIMESTAMP + "=? AND " + LocalDatabaseSchema.ResponsesTable.Columns.TRANSMITTED + "=0",
-                new String[] {timestamp}
+                LocalDatabaseSchema.ResponsesTable.NAME,                                                                                            // table
+                values,                                                                                                                             // values
+                LocalDatabaseSchema.ResponsesTable.Columns.TIMESTAMP + "=? AND " + LocalDatabaseSchema.ResponsesTable.Columns.TRANSMITTED + "=0",   // whereClause
+                new String[] {timestamp}                                                                                                            // whereArgs
         );
     }
 
-    public static Cursor getUntransmitted(SQLiteDatabase sqLiteDatabase) {
+    public static void markFileAsTransmitted(String filePath, LocalDatabaseHelper localDatabaseHelper) {
+        ContentValues values = new ContentValues();
+        values.put(LocalDatabaseSchema.ResponsesTable.Columns.TRANSMITTED, true);
+        localDatabaseHelper.getWritableDatabase().update(
+                LocalDatabaseSchema.FilesTable.NAME,                                                                                        // table
+                values,                                                                                                                     // values
+                LocalDatabaseSchema.FilesTable.Columns.FILEPATH + "=? AND " + LocalDatabaseSchema.FilesTable.Columns.TRANSMITTED + "=0",    // whereClause
+                new String[] {filePath}                                                                                                     // whereArgs
+        );
+    }
+
+    public static Cursor getUntransmittedResponses(SQLiteDatabase sqLiteDatabase) {
         return sqLiteDatabase.query(
                 LocalDatabaseSchema.ResponsesTable.NAME,                                // table
                 new String[] {                                                          // columns
@@ -76,9 +94,23 @@ public class LocalDatabaseHelper extends SQLiteOpenHelper {
         );
     }
 
+    public static Cursor getUntransmittedFiles(SQLiteDatabase sqLiteDatabase) {
+        return sqLiteDatabase.query(
+                LocalDatabaseSchema.FilesTable.NAME,                                    // table
+                new String[] {                                                          // columns
+                        LocalDatabaseSchema.FilesTable.Columns.FILEPATH
+                },
+                LocalDatabaseSchema.ResponsesTable.Columns.TRANSMITTED + "=0",          // selection
+                null,                                                                   // selectionargs
+                null,                                                                   // groupBy
+                null,                                                                   // having
+                null                                                                    // orderBy
+        );
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
-        // TODO Deliberately blank for now, may update later
+        // Deliberately blank for now, expecting no significant changes to database schema
     }
 
 }

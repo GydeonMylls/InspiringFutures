@@ -174,6 +174,4 @@ public abstract class ESM_MultipleChoice extends ESM_Question {
         }
     }
 
-    // TODO Remove duplicates on setting options
-
 }
