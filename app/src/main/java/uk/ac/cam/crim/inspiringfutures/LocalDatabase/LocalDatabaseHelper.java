@@ -37,10 +37,10 @@ public class LocalDatabaseHelper extends SQLiteOpenHelper {
         // Create DiaryTable
         String createString = "create table " + LocalDatabaseSchema.ResponsesTable.NAME + "( "
 //                + "id"                                                          + " INTEGER PRIMARY KEY"                                + ", "
-                + LocalDatabaseSchema.ResponsesTable.Columns.DEVICE_ID          + " VARCHAR(20)"                                                    + ", "
-                + LocalDatabaseSchema.ResponsesTable.Columns.QUESTIONNAIRE_ID                                                                       + ", "
-                + LocalDatabaseSchema.ResponsesTable.Columns.TIMESTAMP          + " INTEGER DEFAULT (cast(strftime('%s','now') as int)) NOT NULL"   + ", "
-                + LocalDatabaseSchema.ResponsesTable.Columns.RESPONSES                                                                              + ", "
+                + LocalDatabaseSchema.ResponsesTable.Columns.DEVICE_ID          + " VARCHAR(20)"                                                                + ", "
+                + LocalDatabaseSchema.ResponsesTable.Columns.QUESTIONNAIRE_ID                                                                                   + ", "
+                + LocalDatabaseSchema.ResponsesTable.Columns.TIMESTAMP          + " INTEGER DEFAULT (cast(strftime('%s','now') as int)) NOT NULL PRIMARY KEY"   + ", "
+                + LocalDatabaseSchema.ResponsesTable.Columns.RESPONSES                                                                                          + ", "
                 + LocalDatabaseSchema.ResponsesTable.Columns.TRANSMITTED        + " BOOLEAN"
                 ;
         createString += ")";

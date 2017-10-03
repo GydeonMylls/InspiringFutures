@@ -16,7 +16,9 @@
 
 package uk.ac.cam.crim.inspiringfutures;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -24,23 +26,20 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.android.gms.iid.InstanceID;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-import uk.ac.cam.crim.inspiringfutures.ESM.ESM_CheckBoxes;
-import uk.ac.cam.crim.inspiringfutures.ESM.ESM_Info;
 import uk.ac.cam.crim.inspiringfutures.ESM.ESM_Questionnaire;
-import uk.ac.cam.crim.inspiringfutures.ESM.ESM_Radios;
-import uk.ac.cam.crim.inspiringfutures.ESM.ESM_Text;
 import uk.ac.cam.crim.inspiringfutures.RemoteServer.RemoteConnection;
+import uk.ac.cam.crim.inspiringfutures.Services.BootReceiver;
 import uk.ac.cam.crim.inspiringfutures.Utilities.LoadingDialog;
 
 /**
@@ -60,6 +59,10 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
     private Fragment mQuestionContainer;        // Separate to facilitate loading of non-daily questionnaires
     private ESM_Questionnaire mQuestionnaire;
 
+    public static Intent newIntent(Context context) {
+        return new Intent(context, MainActivity.class);
+    }
+
     public static String getDeviceId() {
         return sDeviceId;
     }
@@ -75,6 +78,8 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
 
         sPreferences = getPreferences(MODE_PRIVATE);
 
+        BootReceiver.startServices(this);
+
         if (sPreferences.contains(KEY_DEVICE_ID)) {
             sDeviceId = sPreferences.getString(KEY_DEVICE_ID, null);
             Log.d(TAG, "Found device ID: " + sDeviceId);
@@ -84,7 +89,7 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
             sPreferences.edit().putString(KEY_DEVICE_ID, sDeviceId).apply();
         }
 
-        if (sPreferences.contains(KEY_PROGRAMME_ID) && sPreferences.contains(KEY_DAILY_QUESTIONNAIRE)) {       // TODO Uncomment this
+        if (false) {//sPreferences.contains(KEY_PROGRAMME_ID) && sPreferences.contains(KEY_DAILY_QUESTIONNAIRE)) {  // TODO Enable
             sProgrammeId = sPreferences.getString(KEY_PROGRAMME_ID, null);
             Log.d(TAG, "Found programme ID: " + sProgrammeId);
             sDailyQuestionnaireString = sPreferences.getString(KEY_DAILY_QUESTIONNAIRE, null);
@@ -104,6 +109,24 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {     // Switch is not really necessary but here for extensibility
+            case R.id.menu_item_settings:
+                //Todo launch preferences activity
+                Toast.makeText(this, "Settings things happen now", Toast.LENGTH_SHORT).show();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     private void loadQuestionnaire() {
         FragmentManager fragmentManager = getSupportFragmentManager();
 
@@ -118,6 +141,10 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
     public class ProgrammePickerTask extends AsyncTask<Void,String,Void> {
         public static final String TAG = "ProgrammePickerTask";
 
+        /**
+         * Wrapper to enable toasting from AsyncTask
+         * @param values    First argument will be displayed as a toast
+         */
         @Override
         protected void onProgressUpdate(String... values) {
             try {
@@ -198,7 +225,7 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
             loadingDialog.show(getSupportFragmentManager(), LoadingDialog.TAG);
 
             try {
-                RemoteConnection remoteConnection = new RemoteConnection(getString(R.string.server_address));
+                RemoteConnection remoteConnection = new RemoteConnection(getString(R.string.server_address) + getString(R.string.server_daily_subdirectory) + "/");
                 sDailyQuestionnaireString = remoteConnection.getFileText( sProgrammeId.replace(' ','_') + ".json");
                 Log.d(TAG, "Setting daily questionnaire string: " + sDailyQuestionnaireString);
                 sPreferences.edit().putString(KEY_DAILY_QUESTIONNAIRE, sDailyQuestionnaireString).apply();
@@ -222,84 +249,6 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
         }
     }
 
-    private String getTestQuestionnaireString(int indent) {
-        String out = null;
-        try {
-            ESM_Info INFO_QUESTION = (ESM_Info) new ESM_Info()
-                    .question("Test info title")
-                    .instructions("<p>You can put HTML text here</p>\n" +
-                            "<h1>Heading 1</h1>\n" +
-                            "<h1>Heading 2</h1>\n" +
-                            "<h3>Heading 3</h3>\n" +
-                            "<h4>Heading 4</h4>\n" +
-                            "<p><strong>Bold</strong>, <em>italic</em> and <span style=\"text-decoration: underline;\">underlined</span> text</p>\n" +
-                            "<p><span style=\"color: #ff0000;\">Red</span>, <span style=\"color: #00ff00;\">green</span> and <span style=\"color: #0000ff;\">blue</span> text</p>\n" +
-                            "<p>And</p>\n" +
-                            "<p>what</p>\n" +
-                            "<p>should</p>\n" +
-                            "<p>happen</p>\n" +
-                            "<p>if</p>\n" +
-                            "<p>the</p>\n" +
-                            "<p>text</p>\n" +
-                            "<p>is</p>\n" +
-                            "<p>sufficiently</p>\n" +
-                            "<p>long</p>\n" +
-                            "<p>that</p>\n" +
-                            "<p>it</p>\n" +
-                            "<p>goes</p>\n" +
-                            "<p>off</p>\n" +
-                            "<p>the</p>\n" +
-                            "<p>screen?</p>\n" +
-                            "<p>Why</p>\n" +
-                            "<p>this</p>\n" +
-                            "<p>of</p>\n" +
-                            "<p>course</p>\n" +
-                            "<p>you</p>\n" +
-                            "<p>silly</p>\n" +
-                            "<p>billy.</p>\n" +
-                            "<p>Isn't</p>\n" +
-                            "<p>this</p>\n" +
-                            "<p>great‽</p>");
-            ESM_Text TEXT_QUESTION = (ESM_Text) new ESM_Text()
-                    .question("Test text question") // Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question Test text question")
-                    .instructions("Test text instructions");
-            ESM_Radios RADIO_QUESTION = (ESM_Radios) new ESM_Radios()
-                    .options( new String[] {"Option 1","Option 2","Option 3","Option 4","Option 5","Option 6","Option 7","Option 8","Option 9","*Other"} )
-                    .question("*Test radio question")
-                    .instructions("Test radio instructions");
-            ESM_CheckBoxes CHECKS_QUESTION = (ESM_CheckBoxes) new ESM_CheckBoxes()
-                    .maxSelection(3)
-                    .options( new String[] {"Option 1","Option 2","Option 3","Option 4","Option 5","Option 6","Option 7","Option 8","Option 9","Other"} )
-                    .question("Test checkboxes question")
-                    .instructions("Test checkboxes instructions");
-            JSONArray TEST_QUESTIONS_JSON = new JSONArray()
-                    .put(INFO_QUESTION.toJSON() )
-                    .put( TEXT_QUESTION.toJSON() )
-                    .put( RADIO_QUESTION.toJSON() )
-                    .put( CHECKS_QUESTION.toJSON() )
-                    ;
-            JSONObject TEST_QUESTIONNAIRE_JSON = new JSONObject().put(ESM_Questionnaire.KEY_QUESTIONNAIRE_ID, "diary_test").put(ESM_Questionnaire.KEY_QUESTIONS_ARRAY, TEST_QUESTIONS_JSON);
-            if (indent>0) {
-                out = TEST_QUESTIONNAIRE_JSON.toString(indent);
-            } else {
-                out = TEST_QUESTIONNAIRE_JSON.toString();
-            }
 
-//            mQuestionnaire = new ESM_Questionnaire().create(TEST_STRING);
-
-//            String CLEAN_BREAK_STRING = TEMP_CLEAN_BREAK_ENROLMENT.getString(4);
-//            TEST_QUESTIONNAIRE = new ESM_Questionnaire().create(CLEAN_BREAK_STRING);
-
-//            String TEST_QUESTIONNAIRE_STRING = TEST_QUESTIONNAIRE_JSON.toString(4);
-//            TEST_QUESTIONNAIRE = new ESM_Questionnaire().create( getString(R.string.diary_test) );
-
-//            new ProgrammePickerTask().execute();
-
-        } catch (JSONException e) {
-            throw new RuntimeException("Problems with JSONs", e);
-        } finally {
-            return out;
-        }
-    }
 
 }
