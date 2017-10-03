@@ -59,11 +59,6 @@ public class ESM_Info extends ESM_Question {
     }
 
     @Override
-    public String getDefaultInstructions() {
-        return "";
-    }
-
-    @Override
     public String getResponse() {
         return "";
     }

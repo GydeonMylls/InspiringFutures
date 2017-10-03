@@ -51,11 +51,6 @@ public class ESM_Text extends ESM_Question {
     }
 
     @Override
-    public String getDefaultInstructions() {
-        return getString(R.string.esm_text_default_instructions);
-    }
-
-    @Override
     public String getResponse() {
         if (null != mResponse) {
             return mResponse.getText().toString();

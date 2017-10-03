@@ -69,11 +69,6 @@ public class ESM_Radios extends ESM_MultipleChoice {
     }
 
     @Override
-    public String getDefaultInstructions() {
-        return getString(R.string.esm_radios_default_instructions);
-    }
-
-    @Override
     public String getResponse() {
         if (null != mRadioGroup){
             if (-1 != mRadioGroup.getCheckedRadioButtonId()) {

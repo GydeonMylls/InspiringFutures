@@ -18,22 +18,33 @@ package uk.ac.cam.crim.inspiringfutures.RemoteServer;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownServiceException;
 
+import javax.net.ssl.HttpsURLConnection;
+
+import uk.ac.cam.crim.inspiringfutures.LocalDatabase.FileCursorWrapper;
 import uk.ac.cam.crim.inspiringfutures.LocalDatabase.LocalDatabaseHelper;
 import uk.ac.cam.crim.inspiringfutures.LocalDatabase.LocalDatabaseSchema;
 import uk.ac.cam.crim.inspiringfutures.LocalDatabase.ResponsesCursorWrapper;
@@ -110,11 +121,10 @@ public class RemoteConnection {
      * @param postParams    Parametres
      * @return  true if the request was successful, false if not
      */
-    private boolean sendPost(String postParams) {
+    public boolean sendPost(String postParams) {
         OutputStream outStream = null;
         try {
-//            HttpsURLConnection connection = (HttpsURLConnection) mServerURL.openConnection(); // TODO USE HTTPS!!!
-            HttpURLConnection connection = (HttpURLConnection) mServerURL.openConnection();
+            HttpsURLConnection connection = (HttpsURLConnection) mServerURL.openConnection();
             connection.setRequestMethod("POST");
             connection.setRequestProperty("User-Agent", USER_AGENT + MainActivity.getDeviceId());
             connection.setDoOutput(true);
@@ -147,6 +157,97 @@ public class RemoteConnection {
         return false;
     }
 
+    public boolean sendFile(String filePath, Context context) {
+        String twoHyphens = "--";
+        String boundary = "*****" + Long.toString(System.currentTimeMillis()) + "*****";
+        String lineEnd = "\r\n";
+
+        String result = "";
+
+        int bytesRead, bytesAvailable, bufferSize;
+        byte[] buffer;
+        int maxBufferSize = 1 * 1024 * 1024;
+
+        String[] splitPath = filePath.split("/");
+        String fileName = splitPath[splitPath.length-1];
+
+
+        FileInputStream fileInputStream = null;
+        DataOutputStream outputStream = null;
+        try {
+            File file = new File(filePath);
+            Uri fileUri = FileProvider.getUriForFile(context, "uk.ac.cam.crim.inspiringfutures.fileprovider", file);
+            String mimeType = context.getContentResolver().getType(fileUri);
+
+            fileInputStream = new FileInputStream(file);
+
+            HttpsURLConnection connection = (HttpsURLConnection) mServerURL.openConnection();
+
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            connection.setUseCaches(false);
+//            connection.setChunkedStreamingMode(0);// Try this, using default chunk size
+
+            // Headers
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Connection", "Keep-Alive");
+            connection.setRequestProperty("User-Agent", "gsm31");
+            connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+            outputStream = new DataOutputStream(connection.getOutputStream());
+
+            // File parameters
+            outputStream.writeBytes(twoHyphens + boundary + lineEnd);
+            outputStream.writeBytes("Content-Disposition: form-data; name=\"" + context.getString(R.string.file_upload_key) + "\"; filename=\"" + fileName + "\"" + lineEnd);
+            outputStream.writeBytes("Content-Type: " + mimeType + lineEnd);
+            outputStream.writeBytes("Content-Transfer-Encoding: binary" + lineEnd);
+            outputStream.writeBytes(lineEnd);
+
+            // Write file
+            bytesAvailable = fileInputStream.available();
+            bufferSize = Math.min(bytesAvailable, maxBufferSize);
+            buffer = new byte[bufferSize];
+            bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+            while (bytesRead > 0) {
+                outputStream.write(buffer, 0, bufferSize);
+                bytesAvailable = fileInputStream.available();
+                bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+            }
+            outputStream.writeBytes(lineEnd);
+
+            // End request
+            outputStream.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+            outputStream.flush();
+
+            return HttpURLConnection.HTTP_OK == connection.getResponseCode();
+
+        } catch (FileNotFoundException e) {
+            // TODO
+            e.printStackTrace();
+        } catch (ProtocolException e) {
+            // TODO
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO
+            e.printStackTrace();
+        } finally {
+            try {
+                if (null != fileInputStream) {
+                    fileInputStream.close();
+                }
+                if (null != outputStream) {
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                // TODO Nothing?
+                e.printStackTrace();
+            }
+        }
+        // Only happens if there's an error
+        return false;
+    }
+
     /**
      * Sends reponses to remote server via HTTP POST requests, marking each response as transmitted on success. The remote connection must be using SSL. This can involve transferring a significant amount of data so try to only call it when using WiFi
      * @param cursor                Responses to be transmitted
@@ -168,7 +269,7 @@ public class RemoteConnection {
             boolean success = sendPost(postParams);
             transmitted++;
             if (success) {
-                LocalDatabaseHelper.markAsTransmitted(toSend.getTimestamp(), localDatabaseHelper);
+                LocalDatabaseHelper.markResponseAsTransmitted(toSend.getTimestamp(), localDatabaseHelper);
                 successes++;
             } else {
                 failures++;
@@ -179,6 +280,30 @@ public class RemoteConnection {
                 + successes + " successful and " +failures + " failed");
     }
 
+    public void transmitFiles(Cursor cursor, LocalDatabaseHelper localDatabaseHelper, Context context) throws IOException {
+        Log.d(TAG, DatabaseUtils.dumpCursorToString(cursor));
+        FileCursorWrapper toSend = new FileCursorWrapper( cursor );
+        toSend.moveToFirst();
+
+        int transmitted = 0;
+        int successes = 0;
+        int failures = 0;
+        while (!toSend.isAfterLast()) {
+            // ToDo creating a new connection every time is quite slow, change this if time allows
+            boolean success = sendFile(toSend.getFilePath(), context);
+            transmitted++;
+            if (success) {
+//                LocalDatabaseHelper.markFileAsTransmitted(toSend.getFilePath(), localDatabaseHelper);
+                successes++;
+            } else {
+                failures++;
+            }
+            toSend.moveToNext();
+        }
+        Log.d(TAG, "Transmitted " + transmitted + " files: "
+                + successes + " successful and " + failures + " failed");
+    }
+
     public static void startSync(final Context context) {
         new AsyncTask<LocalDatabaseHelper,Void,Void>() {
             @Override
@@ -187,10 +312,10 @@ public class RemoteConnection {
                 try {
                     db = localDatabaseHelpers[0].getWritableDatabase();
                     RemoteConnection remoteConnection = new RemoteConnection(context.getResources().getString(R.string.server_address));
-                    ResponsesCursorWrapper toSend = new ResponsesCursorWrapper( LocalDatabaseHelper.getUntransmitted(db) );
+                    ResponsesCursorWrapper toSend = new ResponsesCursorWrapper( LocalDatabaseHelper.getUntransmittedResponses(db) );
                     remoteConnection.transmitResponses( toSend, localDatabaseHelpers[0] );
                 } catch (IOException | ArrayIndexOutOfBoundsException e) {
-                    // TODO
+                    // TODO Handle exceptions
                     e.printStackTrace();
                 } finally {
                     if ( (null != db) && (db.isOpen()) ) {

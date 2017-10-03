@@ -35,15 +35,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import uk.ac.cam.crim.inspiringfutures.JSONWrappers.JSONResponsesWrapper;
 import uk.ac.cam.crim.inspiringfutures.LocalDatabase.LocalDatabaseHelper;
 import uk.ac.cam.crim.inspiringfutures.LocalDatabase.LocalDatabaseSchema;
 import uk.ac.cam.crim.inspiringfutures.MainActivity;
 import uk.ac.cam.crim.inspiringfutures.R;
-import uk.ac.cam.crim.inspiringfutures.Utilities.JSONContentValues;
 
 /**
  * Represents and manages an ordered collection of ESM_QUESTION objects
@@ -266,50 +269,27 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
      */
     private void submitResponses() {
         //
-        if (getResponsesAsString().getBytes().length <= 1000000000) { // TODO RemoteDatabaseHelper.SQLITE_MAX_LENGTH) {
+//        if (getResponsesAsString().getBytes().length <= 1000000000) { // TODO RemoteDatabaseHelper.SQLITE_MAX_LENGTH) {
             Log.d(TAG, "Submitting responses to " + mCurrentQuestionIndex + " questions");
 
             LocalDatabaseHelper helper = new LocalDatabaseHelper( getContext().getApplicationContext() );
             SQLiteDatabase db = helper.getWritableDatabase();
             try {
-                db.insert(LocalDatabaseSchema.ResponsesTable.NAME, null, getContentValues());
+                db.insert(LocalDatabaseSchema.ResponsesTable.NAME, null, getResponsesContentValues());
+                for (ContentValues values : getFilesContentValues()) {
+                    db.insert(LocalDatabaseSchema.FilesTable.NAME, null, values);
+                }
                 Toast.makeText(getActivity(), R.string.submission_toast, Toast.LENGTH_SHORT).show();
-
-//                new AsyncTask<LocalDatabaseHelper,Void,Void>() {     // TODO DELETE this
-//
-//                    @Override
-//                    protected Void doInBackground(LocalDatabaseHelper... localDatabaseHelpers) {
-//                        SQLiteDatabase db = null;
-//                        try {
-//                            db = localDatabaseHelpers[0].getWritableDatabase();
-//                            // TODO Check for WiFi
-//                            // TODO Run on timer, daily/weekly?
-////                            RemoteConnection remoteConnection = new RemoteConnection( "https://posttestserver.com/post.php?dir=gsm31" );      // TODO IMPORTANT USE REAL SERVER
-//                            RemoteConnection remoteConnection = new RemoteConnection(getString(R.string.server_address));
-//                            ResponsesCursorWrapper toSend = new ResponsesCursorWrapper( LocalDatabaseHelper.getUntransmitted(db) );
-//                            remoteConnection.transmitResponses( toSend, localDatabaseHelpers[0] );
-//                        } catch (IOException | ArrayIndexOutOfBoundsException e) {
-//                            // TODO
-//                            e.printStackTrace();
-//                        } finally {
-//                            if ( (null != db) && (db.isOpen()) ) {
-//                                db.close();
-//                            }
-//                        }
-//
-//                        return null;
-//                    }
-//                }.execute(helper);
             } finally {
                 db.close();
                 getActivity().finish();
             }
-        } else {
-            Toast.makeText(getActivity(), R.string.esm_responses_too_large, Toast.LENGTH_SHORT).show();
-        }
+//        } else {
+//            Toast.makeText(getActivity(), R.string.esm_responses_too_large, Toast.LENGTH_SHORT).show();
+//        }
     }
 
-    private ContentValues getContentValues() {
+    private ContentValues getResponsesContentValues() {
         ContentValues values = new ContentValues();
         values.put(LocalDatabaseSchema.ResponsesTable.Columns.DEVICE_ID, MainActivity.getDeviceId() );
         values.put(LocalDatabaseSchema.ResponsesTable.Columns.QUESTIONNAIRE_ID, this.mID);
@@ -319,17 +299,45 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
         return values;
     }
 
+    private ContentValues[] getFilesContentValues() {
+        List<File> files = new ArrayList<File>();
+        for (ESM_Question question : mQuestions) {
+            if (question instanceof ESM_FileCreator) {
+                files.addAll(
+                        Arrays.asList(
+                                ((ESM_FileCreator) question).getFiles()
+                        )
+                );
+            }
+        }
+        ContentValues[] values = new ContentValues[files.size()];
+        for (int i=0; i<files.size(); i++) {
+            values[i] = new ContentValues();
+            values[i].put(
+                    LocalDatabaseSchema.FilesTable.Columns.FILEPATH,
+                    files.get(i).getAbsolutePath()
+            );
+            values[i].put(LocalDatabaseSchema.FilesTable.Columns.TRANSMITTED, false);
+        }
+        return values;
+    }
+
 //    private void putResponses(ContentValues values) {
 
     private String getResponsesAsString() {
-        JSONContentValues values = new JSONContentValues();
+        JSONResponsesWrapper values = new JSONResponsesWrapper();
         for (int i=0; i<mQuestions.size(); i++) {
-            Object response = mQuestions.get(i).getResponse();
+            Serializable response = mQuestions.get(i).getResponse();
             if (null != response) {
-                JSONContentValues.putJSONContentValues(values, "question"+i, response );
+                try {
+                    values.put(i, response);
+                } catch (JSONException e) {
+                    // Shouldn't happen, exception thrown for invalid index
+                    e.printStackTrace();
+                }
             } else {
-                Log.d(TAG, "getContentValues failed, one or more questions are not fully initialised and returned null to getResponse()");
-                return null;
+                Log.w(TAG, "Question "+i+" of questionnaire "+mID+" returned null as its response");
+                values.put("ERROR");
             }
         }
         return values.toString();
@@ -340,9 +348,9 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
 //        }
 //            }
 //                return;
-//                Log.d(TAG, "getContentValues failed, one or more questions are not fully initialised and returned null to getResponse()");
+//                Log.d(TAG, "getResponsesContentValues failed, one or more questions are not fully initialised and returned null to getResponse()");
 //            } else {
-//                JSONContentValues.putContentValues(values, LocalDatabaseSchema.DiaryTable.COLUMN_NAME+i, response );
+//                JSONResponsesWrapper.putContentValues(values, LocalDatabaseSchema.DiaryTable.COLUMN_NAME+i, response );
 //            if (null != response) {
 //            Object response = mQuestions.get(i).getResponse();
 //        for (int i=0; i<mQuestions.size(); i++) {
@@ -389,5 +397,5 @@ public class ESM_Questionnaire extends Fragment { //} implements ESM_Question.ES
 //        super.onDetach();
 //    }
 
-    // TODO URGENT Buttons and question count get screwed up by rotation
+    // TODO Buttons and question count get screwed up by rotation
 }

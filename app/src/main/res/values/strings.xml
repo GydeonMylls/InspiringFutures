@@ -40,7 +40,7 @@
     <string name="esm_checkboxes_limit_message">Please select no more than %1$d options</string>
 
     <string name="reminder_title">Daily questionnaire</string>
-    <string name="reminder_message">What\'s it like today?</string>
+    <string name="reminder_message">How are you today?</string>
 
     <string name="esm_responses_too_large">Your responses are too large, if you are submitting audio, video or images please select smaller files</string>
 

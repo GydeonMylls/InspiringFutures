@@ -16,13 +16,8 @@
 
 package uk.ac.cam.crim.inspiringfutures.LocalDatabase;
 
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.CursorWrapper;
-
-import org.json.JSONException;
-
-import uk.ac.cam.crim.inspiringfutures.Utilities.JSONContentValues;
 
 /**
  * <p> Created by  Gideon Mills on 25/08/2017 for InspiringFutures. </p>
@@ -48,21 +43,6 @@ public class ResponsesCursorWrapper extends CursorWrapper {
 
     public String getResponsesString() {
         return getString( getColumnIndex( LocalDatabaseSchema.ResponsesTable.Columns.RESPONSES ) );
-    }
-
-    public JSONContentValues getResponsesJSONContentValues() {
-        JSONContentValues out = null;
-        try {
-             out = new JSONContentValues( getResponsesString() );
-        } catch (JSONException e) {
-            // TODO
-            e.printStackTrace();
-        }
-        return out;
-    }
-
-    public ContentValues getResponsesContentValues() {
-        return getResponsesJSONContentValues().toContentValues();
     }
 
 }

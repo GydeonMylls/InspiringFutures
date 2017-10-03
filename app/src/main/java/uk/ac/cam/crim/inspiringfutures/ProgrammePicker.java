@@ -18,9 +18,9 @@ package uk.ac.cam.crim.inspiringfutures;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.view.View;
@@ -159,7 +159,8 @@ public class ProgrammePicker extends DialogFragment {
                             String passwordHash = SHA256Hasher.sha256Hash(password);
 
                             if (passwordHash.equalsIgnoreCase( mHashes[courseId] )) {
-                                getActivity().getPreferences(Context.MODE_PRIVATE)
+//                                getActivity().getPreferences(Context.MODE_PRIVATE)
+                                PreferenceManager.getDefaultSharedPreferences(getActivity())
                                         .edit()
                                         .putString( MainActivity.KEY_PROGRAMME_ID, course )
                                         .apply();
@@ -206,5 +207,7 @@ public class ProgrammePicker extends DialogFragment {
     public void setOnCancelListener(DialogInterface.OnCancelListener listener) {
         mOnCancelListener = listener;
     }
+
+    // ProgrammePickerTask and DailQuestionnaireUpdaterTask are in MainActivity, primarily to facilitate access to static fields and resources
 
 }

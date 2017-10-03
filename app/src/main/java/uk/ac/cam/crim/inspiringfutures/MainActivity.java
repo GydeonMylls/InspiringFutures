@@ -16,18 +16,25 @@
 
 package uk.ac.cam.crim.inspiringfutures;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.iid.InstanceID;
@@ -76,7 +83,7 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sPreferences = getPreferences(MODE_PRIVATE);
+        sPreferences = PreferenceManager.getDefaultSharedPreferences(this);     //getPreferences(MODE_PRIVATE);
 
         BootReceiver.startServices(this);
 
@@ -89,7 +96,7 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
             sPreferences.edit().putString(KEY_DEVICE_ID, sDeviceId).apply();
         }
 
-        if (false) {//sPreferences.contains(KEY_PROGRAMME_ID) && sPreferences.contains(KEY_DAILY_QUESTIONNAIRE)) {  // TODO Enable
+        if (sPreferences.contains(KEY_PROGRAMME_ID) && sPreferences.contains(KEY_DAILY_QUESTIONNAIRE)) {  // TODO Enable
             sProgrammeId = sPreferences.getString(KEY_PROGRAMME_ID, null);
             Log.d(TAG, "Found programme ID: " + sProgrammeId);
             sDailyQuestionnaireString = sPreferences.getString(KEY_DAILY_QUESTIONNAIRE, null);
@@ -119,8 +126,45 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {     // Switch is not really necessary but here for extensibility
             case R.id.menu_item_settings:
-                //Todo launch preferences activity
-                Toast.makeText(this, "Settings things happen now", Toast.LENGTH_SHORT).show();
+                // TODO Create preferences activity
+
+                Dialog licenceDialog = new Dialog(this);
+                licenceDialog.setTitle("Licence");
+
+                ViewGroup.LayoutParams wrapParams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+                TextView textView = new TextView(this);
+                textView.setText(
+                        "Copyright 2017 Gideon Mills\n" +
+                        " \n" +
+                        " Licensed under the Apache License, Version 2.0 (the \"License\");\n" +
+                        " you may not use this file except in compliance with the License.\n" +
+                        " You may obtain a copy of the License at\n" +
+                        " \n" +
+                        "     http://www.apache.org/licenses/LICENSE-2.0\n" +
+                        " \n" +
+                        " Unless required by applicable law or agreed to in writing, software\n" +
+                        " distributed under the License is distributed on an \"AS IS\" BASIS,\n" +
+                        " WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n" +
+                        " See the License for the specific language governing permissions and\n" +
+                        " limitations under the License."
+                );
+
+                LinearLayout linearLayout = new LinearLayout(this);
+                linearLayout.setLayoutParams( wrapParams );
+                linearLayout.setOrientation(LinearLayout.VERTICAL);
+                linearLayout.setGravity(Gravity.CENTER);
+                int padding = (int) (20 * getResources().getDisplayMetrics().density + 0.5f);       // setPadding takes px so convert from dp
+                linearLayout.setPadding(padding, padding, padding, padding);
+                linearLayout.addView(textView, -1, wrapParams);
+
+                ScrollView scrollView = new ScrollView(this);
+                scrollView.setLayoutParams(wrapParams);
+                scrollView.addView(linearLayout);
+
+                licenceDialog.setContentView(scrollView);
+                licenceDialog.show();
+
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -147,10 +191,8 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
          */
         @Override
         protected void onProgressUpdate(String... values) {
-            try {
-                Toast.makeText(MainActivity.this, values[0], Toast.LENGTH_SHORT).show();      // TODO
-            } catch (ArrayIndexOutOfBoundsException e) {
-                e.printStackTrace();
+            for (String text : values) {
+                Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -172,7 +214,7 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
                     hashes[i] = lineArr[1];
                 }
 
-                Log.d(TAG, "Found programmes :" + Arrays.toString(programmes)); // TODO print programmes
+                Log.d(TAG, "Found programmes :" + Arrays.toString(programmes)); // TODO print programmes <- does this not print correctly?
                 ProgrammePicker programmePicker = new ProgrammePicker().setCourses(programmes).setHashes(hashes);
                 programmePicker.setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override
@@ -210,12 +252,14 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
     public class DailyQuestionnaireUpdaterTask extends AsyncTask<Void,String,Void> {
         public static final String TAG = "DailyUpdater";
 
+        /**
+         * Wrapper to enable toasting from AsyncTask
+         * @param values    First argument will be displayed as a toast
+         */
         @Override
         protected void onProgressUpdate(String... values) {
-            try {
-                Toast.makeText(MainActivity.this, values[0], Toast.LENGTH_SHORT).show();      // TODO
-            } catch (ArrayIndexOutOfBoundsException e) {
-                e.printStackTrace();
+            for (String text : values) {
+                Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
             }
         }
 
