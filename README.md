@@ -2,12 +2,6 @@
 See also the [server documentation](https://github.com/GydeonMylls/InspiringFutures-server).
 
 ## Introduction
-Inspiring Futures is an app developed with the [Institute of Criminology](http://www.crim.cam.ac.uk/) at the University of Cambridge.
-
-# Inspiring Futures - Client
-See also the [server documentation](https://github.com/GydeonMylls/InspiringFutures-server).
-
-## Introduction
 Inspiring Futures is an app developed with the [Institute of Criminology](http://www.crim.cam.ac.uk/) at the University of Cambridge. The app allows users to submit daily answers, including photos, to a series of questions.
 
 ## Tutorial
