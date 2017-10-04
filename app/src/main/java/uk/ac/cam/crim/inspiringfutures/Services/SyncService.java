@@ -51,7 +51,7 @@ public class SyncService extends IntentService {
     public static final int DEFAULT_SYNC_HOUR = 12;
     public static final int DEFAULT_SYNC_MINUTE = 0;
 
-    public static final long SYNC_INTERVAL = 60 * 1000;      //AlarmManager.INTERVAL_DAY;      // TODO Set interval to one day
+    public static final long SYNC_INTERVAL = AlarmManager.INTERVAL_DAY;
 
     public SyncService() {
         super(TAG);
@@ -67,8 +67,8 @@ public class SyncService extends IntentService {
         ConnectivityManager connectivityManager = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         boolean wifiConnected = (null != activeNetworkInfo)
-                && (activeNetworkInfo.isConnectedOrConnecting());
-//                && (activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI);    // TODO Enable
+                && (activeNetworkInfo.isConnectedOrConnecting())
+                && (activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI);
         if (wifiConnected) {
             Log.d(TAG, "WiFi connected, starting sync");
             PreferenceManager.getDefaultSharedPreferences(this)
@@ -122,11 +122,9 @@ public class SyncService extends IntentService {
         }
         Calendar NOW = Calendar.getInstance();
         Calendar target = Calendar.getInstance();
-        target.setTimeInMillis( target.getTimeInMillis() + SYNC_INTERVAL );
-        // TODO Use real time
-//        target.setTimeInMillis(lastSync + SYNC_INTERVAL);
-//        target.set(Calendar.HOUR_OF_DAY, DEFAULT_SYNC_HOUR);
-//        target.set(Calendar.MINUTE, DEFAULT_SYNC_MINUTE);
+        target.setTimeInMillis(lastSync + SYNC_INTERVAL);
+        target.set(Calendar.HOUR_OF_DAY, DEFAULT_SYNC_HOUR);
+        target.set(Calendar.MINUTE, DEFAULT_SYNC_MINUTE);
 
         Log.d(TAG, "Scheduling first sync for " + target.get(Calendar.HOUR_OF_DAY) + ":" + target.get(Calendar.MINUTE)
                 + ", repeating every " + SYNC_INTERVAL + "ms");

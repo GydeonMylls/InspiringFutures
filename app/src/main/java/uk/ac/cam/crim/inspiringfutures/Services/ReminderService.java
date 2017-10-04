@@ -28,6 +28,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.Calendar;
+import java.util.Date;
 
 import uk.ac.cam.crim.inspiringfutures.MainActivity;
 import uk.ac.cam.crim.inspiringfutures.R;
@@ -47,9 +48,9 @@ public class ReminderService extends IntentService {
 
     public static final int DEFAULT_REMINDER_HOUR = 15;
     public static final int DEFAULT_REMINDER_MINUTE = 0;
-    public static final long DEFAULT_REMINDER_INTERVAL = 10 * 1000;      //AlarmManager.INTERVAL_DAY;      // TODO Set interval to one day
+    public static final long DEFAULT_REMINDER_INTERVAL = AlarmManager.INTERVAL_DAY;
 
-    public static final long REMINDER_INTERVAL = 60 * 1000;      //AlarmManager.INTERVAL_DAY;      // TODO Set interval to one day
+    public static final long REMINDER_INTERVAL = AlarmManager.INTERVAL_DAY;
 
     public ReminderService() {
         super(TAG);
@@ -101,15 +102,13 @@ public class ReminderService extends IntentService {
         // Using java.util.Calendar rather than android.icu.util.Calendar for compatability
         Calendar NOW = Calendar.getInstance();
         Calendar target = Calendar.getInstance();
-        target.setTimeInMillis( target.getTimeInMillis() + REMINDER_INTERVAL );
-        // TODO Use real time
-//        target.setTime( new Date() );
-//        target.set(Calendar.HOUR_OF_DAY, reminderHour);
-//        target.set(Calendar.MINUTE, reminderMinute);
-//        if (target.before(NOW)) target.add(Calendar.DATE,1);
+        target.setTime( new Date() );
+        target.set(Calendar.HOUR_OF_DAY, reminderHour);
+        target.set(Calendar.MINUTE, reminderMinute);
+        if (target.before(NOW)) target.add(Calendar.DATE,1);
 
         Log.d(TAG, "Scheduling first reminder for " + target.get(Calendar.HOUR_OF_DAY) + ":" + target.get(Calendar.MINUTE)
                 + ", repeating every " + REMINDER_INTERVAL + "ms");
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, target.getTimeInMillis(), REMINDER_INTERVAL, notificationIntent);
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, target.getTimeInMillis(), reminderInterval, notificationIntent);
     }
 }
