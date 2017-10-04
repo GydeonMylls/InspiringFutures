@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity { //implements DialogInterfa
             sPreferences.edit().putString(KEY_DEVICE_ID, sDeviceId).apply();
         }
 
-        if (sPreferences.contains(KEY_PROGRAMME_ID) && sPreferences.contains(KEY_DAILY_QUESTIONNAIRE)) {  // TODO Enable
+        if (sPreferences.contains(KEY_PROGRAMME_ID) && sPreferences.contains(KEY_DAILY_QUESTIONNAIRE)) {
             sProgrammeId = sPreferences.getString(KEY_PROGRAMME_ID, null);
             Log.d(TAG, "Found programme ID: " + sProgrammeId);
             sDailyQuestionnaireString = sPreferences.getString(KEY_DAILY_QUESTIONNAIRE, null);
