@@ -24,7 +24,7 @@ import org.json.JSONObject;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 
-//import uk.ac.cam.crim.inspiringfutures.server.Log;  // Toggle as necessary
+//import uk.ac.cam.crim.inspiringfutures.server.Log;
 
 /**
  * Contains methods to represent a ContentValues-compatible key-value pair in a JSON object
