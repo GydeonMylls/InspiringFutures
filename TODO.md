@@ -1,6 +1,7 @@
 # To Do
-(Loosely ordered by priority)
+(Roughly ordered by priority)
 
+* [ ] Fix file upload method
 * [ ] Expand ESM_AudioVideo to include audio and video (unsurprisingly)
 * [ ] Settings
     * [ ] Show device ID
@@ -11,7 +12,7 @@
 * [ ] Allow pushing questionnaires down to device - using MQTT?
     * [ ] One-time questionnaires
     * [ ] Changes to daily questionnaire
-* [ ] Fix Other option behaviour in ESM_Radios
+* [ ] Fix Other option behaviour in ESM_Radios (doesn't forget custom entry when unselected in certain ways)
 * [ ] Support screen rotation
     * [ ] Fix buttons
 * [ ] Different layout for tablets
